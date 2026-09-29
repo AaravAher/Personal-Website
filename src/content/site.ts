@@ -199,12 +199,46 @@ export const personal: Personal = {
   resume: "/resume/Aarav_Aher_Resume.pdf",
 };
 
+export type HeroStat = {
+  label: string;
+  value: string;
+  /** "clock": appends live Boston time. "availability": teal dot + mailto link. */
+  kind?: "clock" | "availability";
+};
+
 /** Stats strip along the bottom of the hero. Keep to four. */
-export const atAGlance: { label: string; value: string }[] = [
+export const atAGlance: HeroStat[] = [
   { label: "Studying", value: "International Business, Northeastern" },
   { label: "Focus", value: "Supply Chain & Marketing" },
-  { label: "Record", value: "301 units in one day, Skillmatics" },
-  { label: "Building", value: "PlannrAI, 50+ beta users" },
+  { label: "Based in", value: "Boston, MA", kind: "clock" },
+  { label: "Looking for", value: "Spring 2027 Co-op", kind: "availability" },
+];
+
+/** Live clock shown after "Based in". */
+export const heroClock = {
+  timeZone: "America/New_York",
+  zoneLabel: "ET",
+  /** Shown in the static HTML until the browser renders the real time. */
+  placeholder: "--:--",
+  separator: " · ",
+};
+
+export type RouteStop = {
+  city: string;
+  lat: number;
+  lng: number;
+  label: string;
+  note: string;
+  /** The current city: teal dot with a pulse. */
+  current?: boolean;
+};
+
+/** Hero route map, drawn in this order (a smooth westward path). */
+export const route: RouteStop[] = [
+  { city: "Mumbai", lat: 19.08, lng: 72.88, label: "Mumbai", note: "Home" },
+  { city: "Glasgow", lat: 55.86, lng: -4.25, label: "Glasgow", note: "Study abroad" },
+  { city: "Boston", lat: 42.36, lng: -71.06, label: "Boston", note: "Northeastern · Now", current: true },
+  { city: "Bay Area", lat: 37.77, lng: -122.42, label: "Bay Area", note: "Celona" },
 ];
 
 /** Hero UI copy. */
@@ -213,6 +247,8 @@ export const heroCopy = {
   linkedinCta: "LinkedIn",
   newTab: "(opens in a new tab)",
   statsLabel: "At a glance",
+  availabilityLabel: "Email me about",
+  mapLabel: "Route map: Mumbai to Glasgow to Boston to the Bay Area",
   scrollCue: "Scroll",
   scrollCueLabel: "Scroll to About",
 };

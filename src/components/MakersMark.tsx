@@ -104,27 +104,31 @@ export function MakersMark({
     >
       {/* Stamp-in, after the name has animated. */}
       <span className="relative block h-full w-full animate-[stamp-in_250ms_ease-out_450ms_both] motion-reduce:animate-none">
-        <svg aria-hidden viewBox="0 0 200 200" className="absolute inset-0 h-full w-full overflow-visible">
+        {/* The ring text is its own <svg> layer, rotated as a whole element around
+            its centre (100, 100). Rotating the element rather than an inner <g>
+            lets the browser composite the spin instead of repainting SVG every frame. */}
+        <svg
+          aria-hidden
+          viewBox="0 0 200 200"
+          className={`absolute inset-0 h-full w-full overflow-visible text-primary transition-colors duration-300 origin-center animate-[spin_40s_linear_infinite] motion-reduce:animate-none ${active} ${paused}`}
+        >
           <defs>
             <path id={pathId(size)} d={RING_PATH} />
           </defs>
-
-          {/* Only this group turns, around the viewBox centre (100, 100). */}
-          <g
-            className={`text-primary transition-colors duration-300 [transform-box:view-box] [transform-origin:center] animate-[spin_40s_linear_infinite] motion-reduce:animate-none ${active} ${paused}`}
+          <text
+            fill="currentColor"
+            fontSize={FONT_SIZE}
+            fontWeight={500}
+            letterSpacing={RING_SPACING}
+            dominantBaseline="central"
+            className="font-sans uppercase"
           >
-            <text
-              fill="currentColor"
-              fontSize={FONT_SIZE}
-              fontWeight={500}
-              letterSpacing={RING_SPACING}
-              dominantBaseline="central"
-              className="font-sans uppercase"
-            >
-              <textPath href={`#${pathId(size)}`}>{makersMark.ring}</textPath>
-            </text>
-          </g>
+            <textPath href={`#${pathId(size)}`}>{makersMark.ring}</textPath>
+          </text>
+        </svg>
 
+        {/* Static inner ring. */}
+        <svg aria-hidden viewBox="0 0 200 200" className="absolute inset-0 h-full w-full">
           <circle cx="100" cy="100" r="58" fill="none" strokeWidth="1.25" className="stroke-primary/25" />
         </svg>
 
