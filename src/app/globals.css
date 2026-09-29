@@ -47,8 +47,10 @@
   --color-accent-strong: #9a3f16;
   --color-accent-bright: #d2642a;
 
-  /* Alias of base for TEXT on dark fills. Use text-cream, not text-base,
-     because text-base is Tailwind's font-size utility. */
+  /* Alias of base for TEXT on dark fills: use text-cream.
+     NEVER use the class text-base (not even for font size): because a colour
+     is named "base", it sets font-size AND cream colour, making text vanish.
+     For 16px text use text-[1rem]. */
   --color-cream: var(--color-base);
 }
 
@@ -92,4 +94,16 @@ body {
 /* Focus rings sitting on the navy footer use the brighter accent for contrast. */
 .on-primary :focus-visible {
   outline-color: var(--color-accent-bright);
+}
+
+/* Devices with a real hover pointer. Captions hide until hover only here, so
+   touch devices always see them. */
+@custom-variant can-hover (@media (hover: hover) and (pointer: fine));
+
+/* Hide the scrollbar on the screenshot strip (still scrollable). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

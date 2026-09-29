@@ -33,33 +33,63 @@ export type MediaItem =
   | { type: "image"; src: string; alt: string; caption?: string }
   | { type: "video"; videoUrl: string; title: string; caption?: string };
 
-export type HeadlineMetric = {
+export type Metric = {
+  /** Keep prefixes/suffixes like "~" and "+" in the string; they survive the count-up. */
   value: string;
   label: string;
 };
 
 export type Market = {
   country: string;
+  /** Flag emoji shown on the market chip. */
+  flag: string;
   /** ISO 3166-1 alpha-3 code, for the world-map visual. */
   iso3: string;
   region: string;
 };
 
+export type ImageAspect = "landscape" | "portrait" | "square";
+
+export type SlotImage = {
+  /** Leave empty to show a placeholder. Fill with e.g. "/images/plannrai/screen-1.png". */
+  src: string;
+  alt: string;
+  caption?: string;
+  aspect: ImageAspect;
+  /** Label shown on the placeholder, e.g. "PlannrAI screenshot 2". */
+  slot: string;
+  /** Overrides the default recommended size for this aspect. */
+  recommendedSize?: string;
+};
+
+export type VideoSource = {
+  provider: "youtube" | "vimeo";
+  /** The video id only, e.g. "dQw4w9WgXcQ". Leave empty to show "coming soon". */
+  id: string;
+  title: string;
+  /** Optional poster image. YouTube falls back to its own thumbnail. */
+  poster?: string;
+};
+
 export type CaseStudy = {
-  slug: string;
+  slug: "plannrai" | "skillmatics" | "celona";
   company: string;
   role: string;
   location: string;
   dates: string;
+  /** One sentence shown under the title. */
+  oneLiner: string;
+  /** Two or three sentences: "The situation". */
   context: string;
   whatIDid: string[];
-  headlineMetric: HeadlineMetric;
-  /** Optional supporting line under the headline metric. */
-  metricNote?: string;
-  media: MediaItem[];
-  /** Embed URL (YouTube/Vimeo). Leave empty to hide. */
-  videoUrl?: string;
-  /** Used by the Celona world-map visual. */
+  /** First is the headline metric; up to two more are supporting. */
+  metrics: Metric[];
+  skills: string[];
+  media: {
+    video?: VideoSource;
+    images: SlotImage[];
+  };
+  /** Celona only: chips below the photos and the world-map visual later. */
   markets?: Market[];
 };
 
@@ -190,6 +220,41 @@ export const education: EducationItem[] = [
   },
 ];
 
+/** Copy for the Work section and case study layout. */
+export const workSection = {
+  eyebrow: "Work",
+  title: "Selected work",
+  // TODO: Aarav to rewrite
+  intro:
+    "Three roles where I helped a product or a brand reach a new market, from the first research to units sold.",
+  caseStudyLabel: "Case study",
+  situationHeading: "The situation",
+  whatIDidHeading: "What I did",
+  skillsHeading: "Skills",
+  marketsHeading: "Markets researched",
+  screenshotsLabel: "screenshots",
+  photosLabel: "photos",
+};
+
+/** Shared UI strings for media components. */
+export const mediaCopy = {
+  videoComingSoon: "Product walkthrough — coming soon",
+  playVideo: "Play video",
+  openImage: "View larger",
+  lightboxLabel: "Image viewer",
+  closeLightbox: "Close image viewer",
+  previousImage: "Previous image",
+  nextImage: "Next image",
+  recommendedPrefix: "Recommended",
+};
+
+/** Default recommended upload size per image aspect (shown on placeholders). */
+export const recommendedSizes: Record<ImageAspect, string> = {
+  landscape: "1600 × 1000 px",
+  portrait: "1170 × 2532 px",
+  square: "1200 × 1200 px",
+};
+
 export const caseStudies: CaseStudy[] = [
   {
     slug: "plannrai",
@@ -197,18 +262,32 @@ export const caseStudies: CaseStudy[] = [
     role: "Co-Founder & Developer",
     location: "Boston, MA",
     dates: "Jan 2026 – Present",
-    context: "An AI-powered day-planning app built for college students.",
+    // TODO: Aarav to rewrite
+    oneLiner: "An AI-powered day-planning app built for college students.",
+    // TODO: Aarav to rewrite
+    context:
+      "College students juggle classes, clubs, jobs and deadlines, and most planners leave them to stitch it all together by hand. PlannrAI uses AI to turn that into a realistic plan for the day. I co-founded it in January 2026 and own both how it's built and how it reaches students.",
     whatIDid: [
-      "Built the core application, owning the architecture and technical implementation.",
-      "Lead all marketing and sales: go-to-market strategy, user acquisition and brand positioning.",
+      "Built and developed the core application, contributing directly to product architecture and technical implementation.",
+      "Leading all marketing and sales efforts, including go-to-market strategy, user acquisition and brand positioning.",
+      "Launched beta testing with 50+ active users, with interest from about 100 additional students ahead of wider release.",
     ],
-    headlineMetric: { value: "50+", label: "beta users" },
-    metricNote: "About 100 more students have shown interest.",
-    media: [
-      // Add screenshots to /public/images/plannrai/, e.g.:
-      // { type: "image", src: "/images/plannrai/screen-1.png", alt: "PlannrAI daily plan view" },
+    metrics: [
+      { value: "50+", label: "active beta users" },
+      { value: "~100", label: "students on the waitlist" },
     ],
-    videoUrl: "",
+    skills: ["Product", "GTM", "User Acquisition", "Brand Positioning"],
+    media: {
+      // Paste the YouTube or Vimeo id (not the full URL) once the video is up.
+      video: { provider: "youtube", id: "", title: "PlannrAI product walkthrough" },
+      images: [
+        // TODO: describe each screen in its alt text once added.
+        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 1" }, // /images/plannrai/screen-1.png
+        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 2" }, // /images/plannrai/screen-2.png
+        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 3" }, // /images/plannrai/screen-3.png
+        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 4" }, // /images/plannrai/screen-4.png
+      ],
+    },
   },
   {
     slug: "skillmatics",
@@ -216,16 +295,34 @@ export const caseStudies: CaseStudy[] = [
     role: "Marketing & Strategy Intern",
     location: "Mumbai, India",
     dates: "May – Jul 2026",
+    // TODO: Aarav to rewrite
+    oneLiner:
+      "Took an adult party-games brand from online-only into physical retail in Mumbai.",
+    // TODO: Aarav to rewrite
     context:
-      "Gouda Games, a Skillmatics brand, was preparing its first physical retail presence in Mumbai.",
+      "Gouda Games, Skillmatics' adult party-games brand, had only ever sold online. Summer 2026 was its first move onto physical shelves in Mumbai, where placement, pricing and store format decide whether a game gets picked up. I joined the marketing and strategy team to help make that launch work.",
     whatIDid: [
-      "Led a retail distribution initiative for the brand's first physical store presence, identifying 20+ retail locations and building placement and pricing strategy across store formats.",
-      "Represented the brand at All You Can Mumbai, selling 100+ units on the ground.",
-      "Ran market research and wrote go-to-market documents for two new product launches, presented to the Founder and CPO.",
+      "Led a retail distribution initiative to establish Gouda Games' first physical presence across stores in Mumbai, identifying 20+ optimal retail locations and developing product placement and pricing strategies across multiple store formats.",
+      "Represented Gouda Games at the All You Can Mumbai event, driving direct sales and moving 100+ units on the ground.",
+      "Conducted market research for two new product launches and prepared and presented GTM documentation to the Founder and CPO.",
+      "Contributed to a record-breaking sales day for the brand: 301 units sold in a single day, the highest in the company's history.",
     ],
-    headlineMetric: { value: "301", label: "units sold in a single day" },
-    metricNote: "A company record.",
-    media: [],
+    metrics: [
+      { value: "301", label: "units in one day, a company record" },
+      { value: "20+", label: "retail locations identified" },
+      { value: "100+", label: "units sold at All You Can Mumbai" },
+    ],
+    skills: ["Retail Distribution", "Pricing", "Market Research", "GTM", "Event Sales"],
+    media: {
+      // TODO: Aarav to confirm captions and alt text once photos are chosen.
+      images: [
+        { src: "", alt: "The Gouda Games stall at All You Can Mumbai", caption: "All You Can Mumbai stall", aspect: "landscape", slot: "Skillmatics photo 1", recommendedSize: "2000 × 1250 px" }, // /images/skillmatics/photo-1.jpg
+        { src: "", alt: "Gouda Games products placed in a Mumbai store", caption: "In-store placement", aspect: "portrait", slot: "Skillmatics photo 2", recommendedSize: "1200 × 1800 px" }, // /images/skillmatics/photo-2.jpg
+        { src: "", alt: "Selling Gouda Games to visitors at the event", caption: "On the ground at the event", aspect: "landscape", slot: "Skillmatics photo 3", recommendedSize: "1600 × 1200 px" }, // /images/skillmatics/photo-3.jpg
+        { src: "", alt: "Gouda Games shelf display with pricing", caption: "Shelf and pricing setup", aspect: "landscape", slot: "Skillmatics photo 4", recommendedSize: "1600 × 1200 px" }, // /images/skillmatics/photo-4.jpg
+        { src: "", alt: "Presenting go-to-market plans to the Skillmatics leadership", caption: "GTM presentation", aspect: "landscape", slot: "Skillmatics photo 5", recommendedSize: "2000 × 900 px" }, // /images/skillmatics/photo-5.jpg
+      ],
+    },
   },
   {
     slug: "celona",
@@ -233,21 +330,41 @@ export const caseStudies: CaseStudy[] = [
     role: "International Business Intern",
     location: "Bay Area, CA",
     dates: "Apr – Jun 2024",
+    // TODO: Aarav to rewrite
+    oneLiner: "Market research across six countries ahead of a global expansion.",
+    // TODO: Aarav to rewrite
     context:
-      "Celona was evaluating markets ahead of its global expansion.",
+      "Celona was preparing to expand beyond the US and needed to know which international markets to prioritise. I joined the international business department to research six candidate markets across four regions and turn the findings into something leadership could act on.",
     whatIDid: [
-      "Conducted primary market research across 6 target markets ahead of global expansion.",
-      "Synthesized competitive, regulatory and demand data into a foreign-market analysis presented to the CEO and 20+ leaders.",
+      "Joined the international business department ahead of the company's global expansion, conducting primary market research across 6 target markets.",
+      "Synthesized competitive, regulatory and demand data into a comprehensive foreign-market analysis.",
+      "Presented the analysis to the CEO and 20+ leaders across international business and marketing.",
     ],
-    headlineMetric: { value: "6", label: "markets analyzed" },
-    media: [],
+    metrics: [
+      { value: "6", label: "markets analyzed" },
+      { value: "20+", label: "leaders presented to" },
+    ],
+    skills: [
+      "Market Research",
+      "Competitive Analysis",
+      "Regulatory Research",
+      "Executive Presentation",
+    ],
+    media: {
+      // TODO: Aarav to confirm captions and alt text once photos are chosen.
+      images: [
+        { src: "", alt: "Presenting the foreign-market analysis", caption: "Presenting the market analysis", aspect: "landscape", slot: "Celona photo 1" }, // /images/celona/photo-1.jpg
+        { src: "", alt: "With the Celona international business team", caption: "International business team", aspect: "landscape", slot: "Celona photo 2" }, // /images/celona/photo-2.jpg
+        { src: "", alt: "Celona office in the Bay Area", caption: "Celona, Bay Area", aspect: "landscape", slot: "Celona photo 3" }, // /images/celona/photo-3.jpg
+      ],
+    },
     markets: [
-      { country: "Mexico", iso3: "MEX", region: "Americas" },
-      { country: "Japan", iso3: "JPN", region: "Asia-Pacific" },
-      { country: "Saudi Arabia", iso3: "SAU", region: "Middle East" },
-      { country: "Turkey", iso3: "TUR", region: "Europe / Middle East" },
-      { country: "United Kingdom", iso3: "GBR", region: "Europe" },
-      { country: "Malaysia", iso3: "MYS", region: "Asia-Pacific" },
+      { country: "Mexico", flag: "🇲🇽", iso3: "MEX", region: "Americas" },
+      { country: "Japan", flag: "🇯🇵", iso3: "JPN", region: "Asia-Pacific" },
+      { country: "Saudi Arabia", flag: "🇸🇦", iso3: "SAU", region: "Middle East" },
+      { country: "Turkey", flag: "🇹🇷", iso3: "TUR", region: "Europe / Middle East" },
+      { country: "United Kingdom", flag: "🇬🇧", iso3: "GBR", region: "Europe" },
+      { country: "Malaysia", flag: "🇲🇾", iso3: "MYS", region: "Asia-Pacific" },
     ],
   },
 ];
