@@ -108,3 +108,20 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Stretched link: the link's ::after covers its whole (position: relative)
+   row, so the row is clickable while only the name is the link's text.
+   The focus ring is drawn around the row, not the name. */
+.stretched-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.stretched-link:focus-visible {
+  outline: none;
+}
+.stretched-link:focus-visible::after {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

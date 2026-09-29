@@ -5,6 +5,7 @@ import { SectionPlaceholder } from "@/components/SectionPlaceholder";
 import { Footer } from "@/components/Footer";
 import { Work } from "@/components/case-study/Work";
 import { OtherExperience } from "@/components/experience/OtherExperience";
+import { ProjectsIndex } from "@/components/ProjectsIndex";
 
 export default function Home() {
   return (
@@ -16,13 +17,7 @@ export default function Home() {
 
         <Work />
         <OtherExperience />
-        <SectionPlaceholder
-          id="projects"
-          index="04"
-          eyebrow="Beyond the classroom"
-          title="Awards & projects"
-          contents={["Coursework", "Simulations", "SiteSmith", "BasisPoint Insight"]}
-        />
+        <ProjectsIndex />
         <SectionPlaceholder
           id="languages"
           eyebrow="In five languages"

@@ -44,6 +44,13 @@ size). Order them in the story you want: e.g. onboarding → plan → detail →
 - [ ] `celona/photo-2.jpg`
 - [ ] `celona/photo-3.jpg`
 
+### Projects index (`projects/`), 2 landscape previews, ~1600 × 1000 px (16:10)
+- [ ] `projects/sitesmith.jpg`: a screenshot of the SiteSmith homepage
+- [ ] `projects/basispoint.jpg`: a screenshot of the Portugal article
+
+Fill in `projectsIndex.featured[…].preview.src` in `site.ts`. They show at
+about 200 px wide on desktop and full width on mobile.
+
 ### Later sections
 - `gallery/`: personal photos for Off the Clock, 1600 px on the long edge
 - `football/`: match or team photos, 1600 × 1200 px (4:3)

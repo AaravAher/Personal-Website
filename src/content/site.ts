@@ -107,18 +107,45 @@ export type ExperienceCard = {
   highlight: Metric;
 };
 
-export type LinkedItem = {
-  label: string;
+export type Article = {
   title: string;
-  description?: string;
-  /** Leave empty until the link is live. */
+  /** Shown next to the title, e.g. "June 2026". */
+  date: string;
+  /** YYYY-MM, used to pick the most recent article. */
+  published: string;
   url: string;
 };
 
-export type AwardsAndProjects = {
-  coursework: string[];
-  simulations: string[];
-  projects: LinkedItem[];
+export type IndexEntry = {
+  slug: string;
+  name: string;
+  /** Small letter-spaced label under the name. */
+  type: string;
+  /** Italic serif line above the description. Writing entries show their latest article instead. */
+  lead?: string;
+  description: string;
+  /** Where the row links. Leave empty for "Link coming soon" (writing entries fall back to the latest article). */
+  url: string;
+  linkLabel: string;
+  preview: SlotImage;
+  articles?: Article[];
+};
+
+export type Course = {
+  name: string;
+  /** Short label for what the course is relevant to. */
+  theme: string;
+};
+
+export type CourseGroup = {
+  institution: string;
+  courses: Course[];
+};
+
+export type Simulation = {
+  name: string;
+  theme: string;
+  completed: boolean;
 };
 
 export type Language = {
@@ -425,29 +452,80 @@ export const experienceSection = {
   flipHint: "Flip for details",
 };
 
-export const awardsAndProjects: AwardsAndProjects = {
+/** "The Index": featured projects, coursework and simulations. */
+export const projectsIndex = {
+  eyebrow: "Index",
+  title: "Projects, writing & coursework",
+  linkComingSoon: "Link coming soon",
+  newTab: "(opens in a new tab)",
+
+  featured: [
+    {
+      slug: "sitesmith",
+      name: "SiteSmith",
+      type: "Studio · Co-founder",
+      lead: "Websites that move at the speed of your idea.",
+      description:
+        "A Mumbai-based, AI-powered web design studio I co-founded with two friends. We build custom websites for personal brands and small businesses, fast and with no middlemen: clients work directly with the three of us from direction and design through to delivery.",
+      url: "https://www.sitesmith.co.in/",
+      linkLabel: "Visit site",
+      // /images/projects/sitesmith.jpg
+      preview: { src: "", alt: "SiteSmith website preview", aspect: "landscape", slot: "SiteSmith preview", recommendedSize: "1600 × 1000 px" },
+    },
+    {
+      slug: "basispoint",
+      name: "BasisPoint Insight",
+      type: "Writing · Published author",
+      description:
+        "Published author at BasisPoint Insight. My piece on Portugal's 1–1 World Cup draw with DR Congo argues the result came down to a midfield that failed to create chances, not to Cristiano Ronaldo.",
+      // Optional author/profile page. Empty: the row links to the latest article.
+      url: "",
+      linkLabel: "Read article",
+      // /images/projects/basispoint.jpg
+      preview: { src: "", alt: "BasisPoint Insight article preview", aspect: "landscape", slot: "BasisPoint preview", recommendedSize: "1600 × 1000 px" },
+      articles: [
+        {
+          title: "Portugal Were Held by a Failure of Service, Not Their Captain",
+          date: "June 2026",
+          published: "2026-06",
+          url: "https://basispointinsight.com/Story/Search/portugal-were-held-by-a-failure-of-service--not-their-captain_27e4841d184e.html",
+        },
+      ],
+    },
+  ] satisfies IndexEntry[] as IndexEntry[],
+
+  courseworkHeading: "Coursework",
   coursework: [
-    "Business Statistics",
-    "Supply-Chain Management",
-    "Decision Making in Developed and Emerging Markets",
-  ],
+    {
+      institution: "Northeastern University",
+      courses: [
+        { name: "Business Statistics", theme: "Analytics" },
+        { name: "Supply-Chain Management", theme: "Operations" },
+        { name: "Decision Making in Developed and Emerging Markets", theme: "International business" },
+      ],
+    },
+    {
+      institution: "University of Glasgow · Study abroad",
+      courses: [
+        { name: "Principles of Microeconomics", theme: "Economics" },
+        { name: "Rhetorical Devices in English", theme: "Communication" },
+      ],
+    },
+  ] satisfies CourseGroup[] as CourseGroup[],
+
+  simulationsHeading: "Simulations",
+  completedLabel: "Completed",
   simulations: [
-    "Market-Entry Simulation",
-    "Supply-Chain Management Simulation",
-  ],
-  projects: [
-    {
-      label: "AI-powered Web Design Studio",
-      title: "SiteSmith",
-      url: "",
-    },
-    {
-      label: "Writing · Published Author",
-      title: "BasisPoint Insight",
-      url: "",
-    },
-  ],
+    { name: "Market-Entry Simulation", theme: "Strategy", completed: true },
+    { name: "Supply-Chain Management Simulation", theme: "Operations", completed: true },
+  ] satisfies Simulation[] as Simulation[],
+  simulationsNote: "Run through D'Amore-McKim School of Business, Northeastern.",
 };
+
+/** The most recent article by `published` (YYYY-MM). */
+export function latestArticle(articles: Article[] = []): Article | undefined {
+  return [...articles].sort((a, b) => b.published.localeCompare(a.published))[0];
+}
 
 export const languages: Language[] = [
   { name: "English", nativeName: "English", moreAboutMe: "More about me", lang: "en" },
