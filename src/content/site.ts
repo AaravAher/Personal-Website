@@ -9,6 +9,8 @@ export type Personal = {
   name: string;
   firstName: string;
   monogram: string;
+  /** Small letter-spaced line above the name in the hero. */
+  overline: string;
   tagline: string;
   location: string;
   email: string;
@@ -20,13 +22,13 @@ export type Personal = {
 };
 
 export type EducationItem = {
+  /** Shown in navy semibold in the About education rows. */
   school: string;
-  /** Short label shown in the About education strip. */
-  shortName: string;
+  /** Shown under the school in lighter navy. */
   detail: string;
-  keyLine: string;
   location?: string;
-  dates?: string;
+  /** Extra detail kept for reference; not currently shown on the site. */
+  notes?: string;
 };
 
 export type MediaItem =
@@ -156,9 +158,9 @@ export const personal: Personal = {
   name: "Aarav Aher",
   firstName: "Aarav",
   monogram: "AA",
+  overline: "International Business · Northeastern \u201929",
   // TODO: Aarav to edit
-  tagline:
-    "International business student building at the intersection of markets, products and people.",
+  tagline: "Building at the intersection of markets, products and people.",
   location: "Mumbai → Boston",
   email: "aher.aa@northeastern.edu",
   phone: "+1 (617) 608-7903",
@@ -167,13 +169,42 @@ export const personal: Personal = {
   resume: "/resume/Aarav_Aher_Resume.pdf",
 };
 
-/** Quick facts beside the name in the hero (desktop). Keep to four. */
+/** Stats strip along the bottom of the hero. Keep to four. */
 export const atAGlance: { label: string; value: string }[] = [
-  { label: "Studying", value: "BS International Business, Northeastern \u201929" },
+  { label: "Studying", value: "International Business, Northeastern" },
   { label: "Focus", value: "Supply Chain & Marketing" },
-  { label: "Record", value: "301 units sold in one day at Skillmatics" },
+  { label: "Record", value: "301 units in one day, Skillmatics" },
   { label: "Building", value: "PlannrAI, 50+ beta users" },
 ];
+
+/** Hero UI copy. */
+export const heroCopy = {
+  emailCta: "Email me",
+  linkedinCta: "LinkedIn",
+  newTab: "(opens in a new tab)",
+  statsLabel: "At a glance",
+  scrollCue: "Scroll",
+  scrollCueLabel: "Scroll to About",
+};
+
+/** Nav UI copy. */
+export const navCopy = {
+  resume: "Resume",
+  resumeLabel: "Resume (opens PDF in a new tab)",
+  skipLink: "Skip to content",
+  openMenu: "Open menu",
+  closeMenu: "Close menu",
+};
+
+/** About section UI copy. */
+export const aboutCopy = {
+  eyebrow: "About",
+  educationHeading: "Education",
+  contactHeading: "Contact",
+  headshotPlaceholder: "Headshot placeholder",
+  linkedinLabel: "LinkedIn",
+  resumeLabel: "Resume",
+};
 
 /** Digits-only phone for tel: links. */
 export const phoneHref = `tel:${personal.phone.replace(/[^\d+]/g, "")}`;
@@ -186,37 +217,27 @@ export const nav: NavLink[] = [
   { label: "Contact", href: "#contact" },
 ];
 
-// TODO: Aarav to rewrite. Placeholder bio, three short paragraphs.
-export const bio: string[] = [
-  "I grew up in Mumbai, a city where every street corner is a small lesson in trade: what sells, who buys it, and how it got there. That curiosity about how businesses actually reach people has followed me ever since.",
-  "Today I study International Business at Northeastern's D'Amore-McKim School of Business, concentrating in Supply Chain and Marketing, after a semester abroad at the University of Glasgow. I'm most drawn to the question of how a product finds its way into a new market, from research and pricing to the shelf.",
-  "Outside class I'm building PlannrAI, an AI day-planner for college students, where I wrote the core app and run go-to-market. I'm looking for co-op and internship roles where I can do the same: dig into a market, then help a product win in it.",
-];
+export const bio =
+  "As a second-year International Business and Analytics student at Northeastern University with a passion for entrepreneurship, global markets, and social impact, I am committed to building experiences that create meaningful change. I thrive on taking initiative, excel at working across cultures and industries, and bring drive to everything I pursue. With a foundation in international business and a focus on continuous growth, I'm eager to leverage my skills to make a difference and build something worthwhile.";
 
 export const education: EducationItem[] = [
   {
     school: "Northeastern University",
-    shortName: "Northeastern",
-    detail: "D'Amore-McKim School of Business",
-    keyLine:
-      "BS International Business, Supply Chain & Marketing concentration",
+    detail: "BS International Business, Supply Chain & Marketing · May 2029",
     location: "Boston, MA",
-    dates: "Expected May 2029",
+    notes: "D'Amore-McKim School of Business",
   },
   {
     school: "University of Glasgow",
-    shortName: "Glasgow",
     detail: "Semester Study Abroad",
-    keyLine: "Principles of Microeconomics, Rhetorical Devices in English",
     location: "Glasgow, UK",
+    notes: "Principles of Microeconomics, Rhetorical Devices in English",
   },
   {
     school: "Hiranandani Foundation International High School",
-    shortName: "High School",
-    detail: "Hiranandani Foundation International",
-    keyLine:
-      "Subject Topper, ranked first in Business, Mathematics and Environmental Science",
+    detail: "Subject Topper",
     location: "Mumbai, India",
+    notes: "Ranked first in Business, Mathematics and Environmental Science",
   },
 ];
 

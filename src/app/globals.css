@@ -17,17 +17,18 @@
  *       and headline-metric numbers. `primary-soft` is for secondary text and
  *       captions. Never use pure black.
  *
- *  10%  ACCENT   (--color-accent, --color-accent-strong, --color-accent-bright)
- *       Burnt orange, used sparingly: primary buttons (Resume, Email me), link
- *       hover and underline states, the active nav indicator, focus rings,
- *       and at most ONE small highlight per section. If a section starts to
- *       look orange, it is overused.
- *         accent        #AE4A1A: text and button fills. Darkened from the
- *                       brief's #D2642A, which only reached 3.5:1 with cream
- *                       text. This gives 5.2:1 on base, 4.8:1 on base-deep.
- *         accent-strong hover and pressed state for accent fills.
- *         accent-bright the original #D2642A. NON-TEXT use only (underlines,
- *                       focus rings) on navy, where it reaches 3.9:1.
+ *  10%  ACCENT   (--color-accent and its tints)
+ *       Teal, used sparingly: primary buttons (Resume, Email me), link hover
+ *       and underline states, the active nav indicator, focus rings, and at
+ *       most ONE small highlight per section. If a section starts to look
+ *       teal, it is overused.
+ *         accent        #0F7C74: button fills and accent text on base.
+ *                       Cream on accent 4.7:1 (AA). Accent text on base 4.7:1.
+ *         accent-strong #0B625C: hover/pressed fill, AND accent text on
+ *                       base-deep sections (plain accent is only 4.4:1 there).
+ *         accent-soft   #E3F1EF: light hover tint behind navy text (12.4:1).
+ *         accent-bright #2BA89E: underlines and focus rings on the navy
+ *                       footer / lightbox (5.0:1 on navy).
  *
  *  No other hues. Photos supply the extra colour.
  * ─────────────────────────────────────────────────────────────────────────
@@ -43,9 +44,10 @@
   --color-primary: #1b2a41;
   --color-primary-soft: #4a5a73;
   /* 10% accent */
-  --color-accent: #ae4a1a;
-  --color-accent-strong: #9a3f16;
-  --color-accent-bright: #d2642a;
+  --color-accent: #0f7c74;
+  --color-accent-strong: #0b625c;
+  --color-accent-soft: #e3f1ef;
+  --color-accent-bright: #2ba89e;
 
   /* Alias of base for TEXT on dark fills: use text-cream.
      NEVER use the class text-base (not even for font size): because a colour

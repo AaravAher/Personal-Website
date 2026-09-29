@@ -18,7 +18,7 @@ const base =
 const variants: Record<Variant, string> = {
   primary: "bg-accent text-cream hover:bg-accent-strong",
   secondary:
-    "border border-primary/25 text-primary hover:border-primary hover:bg-primary hover:text-cream",
+    "border border-primary text-primary hover:border-accent hover:bg-accent-soft",
 };
 
 const sizes: Record<Size, string> = {

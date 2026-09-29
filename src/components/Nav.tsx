@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FileText, Menu, X } from "lucide-react";
-import { nav, personal } from "@/content/site";
+import { nav, navCopy, personal } from "@/content/site";
 import { Button } from "@/components/ui/Button";
 
 /**
@@ -87,14 +87,14 @@ export function Nav() {
           ? "border-b border-primary/10 bg-base"
           : scrolled
           ? "border-b border-primary/10 bg-base/85 backdrop-blur-md"
-          : "border-b border-transparent bg-transparent"
+          : "bg-transparent"
       }`}
     >
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:text-cream"
       >
-        Skip to content
+        {navCopy.skipLink}
       </a>
 
       <nav
@@ -119,15 +119,15 @@ export function Nav() {
                 <a
                   href={link.href}
                   aria-current={isActive ? "location" : undefined}
-                  className={`relative py-2 text-sm transition-colors hover:text-accent ${
-                    isActive ? "text-primary" : "text-primary-soft"
-                  }`}
+                  className="group relative py-2 text-sm text-primary"
                 >
                   {link.label}
                   <span
                     aria-hidden
-                    className={`absolute inset-x-0 -bottom-0.5 h-0.5 origin-left rounded-full bg-accent transition-transform duration-300 ${
-                      isActive ? "scale-x-100" : "scale-x-0"
+                    className={`absolute inset-x-0 -bottom-0.5 h-0.5 origin-left rounded-full transition-transform duration-300 ${
+                      isActive
+                        ? "scale-x-100 bg-accent"
+                        : "scale-x-0 bg-primary/30 group-hover:scale-x-100"
                     }`}
                   />
                 </a>
@@ -142,16 +142,16 @@ export function Nav() {
             external
             size="sm"
             icon={<FileText size={15} aria-hidden />}
-            aria-label="Resume (opens PDF in a new tab)"
+            aria-label={navCopy.resumeLabel}
           >
-            Resume
+            {navCopy.resume}
           </Button>
           <button
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-primary/5 md:hidden"
             aria-expanded={open}
             aria-controls="mobile-menu"
-            aria-label={open ? "Close menu" : "Open menu"}
+            aria-label={open ? navCopy.closeMenu : navCopy.openMenu}
             onClick={() => setOpen((o) => !o)}
           >
             {open ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
@@ -173,9 +173,7 @@ export function Nav() {
                   href={link.href}
                   onClick={() => setOpen(false)}
                   aria-current={isActive ? "location" : undefined}
-                  className={`flex items-center justify-between border-b border-primary/10 py-4 font-serif text-2xl ${
-                    isActive ? "text-primary" : "text-primary-soft"
-                  }`}
+                  className="flex items-center justify-between border-b border-primary/10 py-4 font-serif text-2xl text-primary"
                 >
                   {link.label}
                   {isActive && (

@@ -1,23 +1,24 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import { ArrowDown, Download, Mail, MapPin, Phone } from "lucide-react";
-import { atAGlance, personal, phoneHref } from "@/content/site";
+import { ArrowDown, Mail } from "lucide-react";
+import { atAGlance, heroCopy, personal } from "@/content/site";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { LinkedInIcon } from "@/components/ui/LinkedInIcon";
 
+// Five groups × 0.05s stagger + 0.35s duration ≈ 0.6s total.
 const container: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
+  show: { transition: { staggerChildren: 0.05 } },
 };
 
 const item: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 8 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
@@ -25,113 +26,83 @@ export function Hero() {
   const [first, ...rest] = personal.name.split(" ");
 
   return (
-    <section
+    <motion.section
       id="top"
       aria-label="Introduction"
-      className="relative flex min-h-svh flex-col justify-center pt-[calc(var(--nav-height)+2rem)] pb-28"
+      className="mt-[var(--nav-height)] flex min-h-[calc(100svh-var(--nav-height))] flex-col"
+      variants={container}
+      initial="hidden"
+      animate="show"
     >
-      <Container>
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="lg:grid lg:grid-cols-12 lg:items-end lg:gap-12"
+      <Container className="relative flex flex-1 flex-col justify-center py-12 sm:py-16">
+        <motion.p
+          variants={item}
+          className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-primary-soft sm:text-xs sm:tracking-[0.2em]"
         >
-          <div className="lg:col-span-8">
-          <motion.p
-            variants={item}
-            className="mb-6 flex items-center gap-2 text-sm text-primary-soft"
-          >
-            <MapPin size={15} aria-hidden />
-            {personal.location}
-          </motion.p>
+          {personal.overline}
+        </motion.p>
 
-          <motion.h1
-            variants={item}
-            className="font-serif text-[clamp(3.75rem,15vw,11rem)] leading-[0.9] tracking-[-0.02em] text-primary"
-          >
-            {first}
-            <br />
-            <em className="italic">{rest.join(" ")}</em>
-          </motion.h1>
+        <motion.h1
+          variants={item}
+          className="mt-5 font-serif text-[clamp(3.5rem,9vw,7.5rem)] leading-[0.95] tracking-[-0.02em] text-primary"
+        >
+          {first} <em className="italic">{rest.join(" ")}</em>
+        </motion.h1>
 
-          <motion.p
-            variants={item}
-            className="mt-8 max-w-xl text-lg leading-relaxed text-primary-soft sm:text-xl"
-          >
-            {personal.tagline}
-          </motion.p>
+        <motion.p
+          variants={item}
+          className="mt-6 max-w-[34rem] text-lg leading-relaxed text-primary sm:text-xl"
+        >
+          {personal.tagline}
+        </motion.p>
 
-          <motion.div
-            variants={item}
-            className="mt-10 flex flex-wrap items-center gap-3"
+        <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-3">
+          <Button
+            href={`mailto:${personal.email}`}
+            icon={<Mail size={17} aria-hidden />}
           >
-            <Button
-              href={`mailto:${personal.email}`}
-              icon={<Mail size={17} aria-hidden />}
-            >
-              Email me
-            </Button>
-            <Button
-              href={personal.linkedin}
-              variant="secondary"
-              external
-              icon={<LinkedInIcon size={16} />}
-              aria-label="LinkedIn (opens in a new tab)"
-            >
-              LinkedIn
-            </Button>
-            <Button
-              href={personal.resume}
-              variant="secondary"
-              download
-              icon={<Download size={17} aria-hidden />}
-            >
-              Download resume
-            </Button>
-          </motion.div>
-
-          {personal.showPhone && (
-            <motion.p variants={item} className="mt-6 text-sm">
-              <a
-                href={phoneHref}
-                className="inline-flex items-center gap-2 text-primary-soft underline decoration-primary/25 underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
-              >
-                <Phone size={14} aria-hidden />
-                {personal.phone}
-              </a>
-            </motion.p>
-          )}
-          </div>
-
-          <motion.dl
-            variants={item}
-            aria-label="At a glance"
-            className="hidden border-t-2 border-primary lg:col-span-4 lg:mb-2 lg:block"
+            {heroCopy.emailCta}
+          </Button>
+          <Button
+            href={personal.linkedin}
+            variant="secondary"
+            external
+            icon={<LinkedInIcon size={16} />}
+            aria-label={`${heroCopy.linkedinCta} ${heroCopy.newTab}`}
           >
-            {atAGlance.map((fact) => (
-              <div key={fact.label} className="border-b border-primary/15 py-4">
-                <dt className="text-xs font-medium uppercase tracking-[0.2em] text-primary-soft">
-                  {fact.label}
-                </dt>
-                <dd className="mt-1 text-[0.95rem] text-primary">{fact.value}</dd>
-              </div>
-            ))}
-          </motion.dl>
+            {heroCopy.linkedinCta}
+          </Button>
         </motion.div>
+
+        <motion.a
+          variants={item}
+          href="#about"
+          aria-label={heroCopy.scrollCueLabel}
+          className="absolute bottom-6 right-5 hidden items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.2em] text-primary-soft/80 transition-colors hover:text-primary sm:right-8 md:flex"
+        >
+          {heroCopy.scrollCue}
+          <ArrowDown size={12} aria-hidden />
+        </motion.a>
       </Container>
 
-      <motion.a
-        href="#about"
-        aria-label="Scroll to About"
-        className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary-soft transition-colors hover:text-accent"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-      >
-        Scroll
-        <ArrowDown size={16} aria-hidden className="motion-safe:animate-bounce" />
-      </motion.a>
-    </section>
+      <Container>
+        <motion.dl
+          variants={item}
+          aria-label={heroCopy.statsLabel}
+          className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-primary/15 py-6 sm:gap-x-10 lg:grid-cols-4 lg:py-7"
+        >
+          {atAGlance.map((fact) => (
+            <div key={fact.label}>
+              <dt className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-primary-soft">
+                {fact.label}
+              </dt>
+              <dd className="mt-1.5 text-sm leading-snug text-primary sm:text-[0.95rem]">
+                {fact.value}
+              </dd>
+            </div>
+          ))}
+        </motion.dl>
+      </Container>
+    </motion.section>
   );
 }

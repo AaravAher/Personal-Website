@@ -1,50 +1,46 @@
-import { Mail, Phone } from "lucide-react";
-import { personal, phoneHref } from "@/content/site";
+import { FileText, Mail, Phone } from "lucide-react";
+import { aboutCopy, heroCopy, personal, phoneHref } from "@/content/site";
 import { LinkedInIcon } from "@/components/ui/LinkedInIcon";
 
-/** Email, LinkedIn and (optionally) phone, as an icon row. */
+/** Email, LinkedIn, phone (if showPhone) and Resume as a quiet icon row. */
 export function ContactLinks({ className = "" }: { className?: string }) {
   const items = [
     {
       href: `mailto:${personal.email}`,
       label: personal.email,
-      icon: <Mail size={17} aria-hidden />,
+      icon: <Mail size={16} aria-hidden />,
     },
     {
       href: personal.linkedin,
-      label: "linkedin.com/in/aarav-aher",
-      icon: <LinkedInIcon size={16} />,
+      label: aboutCopy.linkedinLabel,
+      icon: <LinkedInIcon size={15} />,
       external: true,
     },
     ...(personal.showPhone
-      ? [
-          {
-            href: phoneHref,
-            label: personal.phone,
-            icon: <Phone size={16} aria-hidden />,
-          },
-        ]
+      ? [{ href: phoneHref, label: personal.phone, icon: <Phone size={15} aria-hidden /> }]
       : []),
+    {
+      href: personal.resume,
+      label: aboutCopy.resumeLabel,
+      icon: <FileText size={15} aria-hidden />,
+      external: true,
+    },
   ];
 
   return (
-    <ul className={`flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-8 ${className}`}>
+    <ul className={`flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-7 sm:gap-y-3 ${className}`}>
       {items.map((item) => (
         <li key={item.href}>
           <a
             href={item.href}
-            {...(item.external
-              ? { target: "_blank", rel: "noopener noreferrer" }
-              : {})}
-            className="group inline-flex items-center gap-2.5 text-sm text-primary transition-colors hover:text-accent"
+            {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className="group inline-flex items-center gap-2 text-sm text-primary"
           >
-            <span className="text-primary-soft transition-colors group-hover:text-accent">
-              {item.icon}
-            </span>
-            <span className="break-all underline decoration-primary/20 underline-offset-4 transition-colors group-hover:decoration-accent sm:break-normal">
+            <span className="text-primary-soft">{item.icon}</span>
+            <span className="underline decoration-transparent decoration-2 underline-offset-4 transition-colors group-hover:decoration-accent-strong">
               {item.label}
             </span>
-            {item.external && <span className="sr-only">(opens in a new tab)</span>}
+            {item.external && <span className="sr-only">{heroCopy.newTab}</span>}
           </a>
         </li>
       ))}
