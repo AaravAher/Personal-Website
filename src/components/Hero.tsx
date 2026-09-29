@@ -16,9 +16,9 @@ import { RouteMap } from "@/components/hero/RouteMap";
  *   0.0  overline + name fade up
  *   0.45 seal stamps in (CSS, in MakersMark)
  *   0.6  tagline + buttons
- *   0.8  stats strip flaps in (~1.2s)
- *   1.4  map arcs draw, cities pop (done ~3.5s)
- *   6.0  comet loop begins
+ *   0.8  stats strip flaps in (~2.2s)
+ *   1.6  map arcs draw, cities pop (done ~3.4s)
+ *   4.2  first flight; the plane lands in Boston at ~10.4s, then every 14–16s
  */
 const item: Variants = {
   hidden: { opacity: 0, y: 8 },
@@ -94,7 +94,9 @@ export function Hero() {
           <motion.p
             variants={item}
             custom={0.6}
-            className="mt-6 max-w-[34rem] text-lg leading-relaxed text-primary sm:text-xl"
+            // lg:w-0 + min-w-full: the tagline fills the column but doesn't widen it, so the
+            // column (and the map's start) is set by the name and seal.
+            className="mt-6 max-w-[34rem] text-lg leading-relaxed text-primary sm:text-xl lg:w-0 lg:min-w-full"
           >
             {personal.tagline}
           </motion.p>
@@ -118,9 +120,11 @@ export function Hero() {
           <MakersMark size="stacked" tooltipAlign="start" className="mt-8 min-[900px]:hidden" />
         </div>
 
-        {/* Hidden on phones. Tablet: 220px tall under the buttons. Desktop: the
-            right column, bleeding into the page margin beyond the 1200px grid. */}
-        <RouteMap className="mt-10 hidden w-[570px] max-w-full md:block lg:mt-0 lg:w-auto lg:-mr-[max(0px,calc((100vw-1200px)/2))]" />
+        {/* Hidden on phones. Tablet: up to 1.4× (798px) under the buttons.
+            Desktop: starts 48px right of the seal (the grid gap) and grows to
+            925px, or as far as 32px short of the viewport edge, whichever is
+            smaller. It overflows its column into the page margin on purpose. */}
+        <RouteMap className="mt-10 hidden w-full max-w-[798px] md:block lg:mt-0 lg:w-[min(925px,calc(100%+max(0px,(100vw-1200px)/2)))] lg:max-w-none" />
 
         <motion.a
           variants={item}

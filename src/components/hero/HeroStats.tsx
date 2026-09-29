@@ -8,7 +8,7 @@ import { useBostonTime } from "./useBostonTime";
 
 /** When the strip starts flapping (after the name, seal, tagline and buttons). */
 const FLAP_START_MS = 800;
-const STAT_STAGGER_MS = 150;
+const STAT_STAGGER_MS = 250;
 
 /** The hero's stats strip: four label/value pairs that flip in like a departures board. */
 export function HeroStats({ variants }: { variants: Variants }) {

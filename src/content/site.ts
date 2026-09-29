@@ -229,16 +229,18 @@ export type RouteStop = {
   lng: number;
   label: string;
   note: string;
-  /** The current city: teal dot with a pulse. */
+  /** The current city: teal dot with a pulse; the route ends here. */
   current?: boolean;
+  /** Part of the note that flashes teal when the plane lands, e.g. "Now". */
+  noteHighlight?: string;
 };
 
-/** Hero route map, drawn in this order (a smooth westward path). */
+/** Hero route map, flown in this order. It ends where I am now: Boston. */
 export const route: RouteStop[] = [
   { city: "Mumbai", lat: 19.08, lng: 72.88, label: "Mumbai", note: "Home" },
   { city: "Glasgow", lat: 55.86, lng: -4.25, label: "Glasgow", note: "Study abroad" },
-  { city: "Boston", lat: 42.36, lng: -71.06, label: "Boston", note: "Northeastern · Now", current: true },
   { city: "Bay Area", lat: 37.77, lng: -122.42, label: "Bay Area", note: "Celona" },
+  { city: "Boston", lat: 42.36, lng: -71.06, label: "Boston", note: "Northeastern · Now", noteHighlight: "Now", current: true },
 ];
 
 /** Hero UI copy. */
@@ -248,7 +250,7 @@ export const heroCopy = {
   newTab: "(opens in a new tab)",
   statsLabel: "At a glance",
   availabilityLabel: "Email me about",
-  mapLabel: "Route map: Mumbai to Glasgow to Boston to the Bay Area",
+  mapLabel: "Route map: Mumbai to Glasgow to the Bay Area to Boston",
   scrollCue: "Scroll",
   scrollCueLabel: "Scroll to About",
 };

@@ -7,12 +7,13 @@ const FLAP_CHARS = "ABCDEFGHJKLNOPQRSTUVXYZ0123456789&";
 /** Narrow finals (i, l, 1, punctuation…) cycle through narrow glyphs so the noise fits their cell. */
 const NARROW_FINALS = "iIlj1!|.,:;·'’()frt";
 const NARROW_CHARS = "I1·,:";
-const STEP_MS = 45;
-const MIN_STEPS = 4;
-const MAX_STEPS = 8;
-/** Characters settle left to right, 25ms apart (compressed for long values). */
-const CHAR_STAGGER_MS = 25;
-const MAX_TOTAL_STAGGER_MS = 500;
+const STEP_MS = 60;
+const MIN_STEPS = 8;
+const MAX_STEPS = 14;
+/** Characters settle left to right, 35ms apart (compressed for long values, so
+    the whole strip still settles in ~2.2s). */
+const CHAR_STAGGER_MS = 35;
+const MAX_TOTAL_STAGGER_MS = 700;
 
 /** Small deterministic PRNG, so a given cell always flips through the same letters. */
 function rand(seed: number) {
@@ -125,7 +126,7 @@ export function SplitFlap({
     const changed = [...text]
       .map((ch, i) => (ch !== prev[i] && !isSpace(ch) ? i : -1))
       .filter((i) => i >= 0);
-    if (changed.length) run(makePlan(text, changed, seed + text.length, 4));
+    if (changed.length) run(makePlan(text, changed, seed + text.length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, reduce]);
 
@@ -152,8 +153,7 @@ export function SplitFlap({
           ) : (
             <span key={w} className="inline-block whitespace-nowrap">
               {word.cells.map(({ cell, final, i }) => (
-                // While flipping, the cell clips its letters to its own box, like a real board.
-                <span key={i} className={`relative inline-block ${cell.flipping ? "overflow-hidden" : ""}`}>
+                <span key={i} className="relative inline-block">
                   {/* Invisible final glyph fixes the cell's size. */}
                   <span className="invisible">{final}</span>
                   {cell.flipping ? (
@@ -163,14 +163,18 @@ export function SplitFlap({
                       </span>
                       <span
                         key={cell.step}
-                        className="absolute inset-0 text-center [clip-path:inset(0_0_50%_0)] animate-[flap-top_45ms_linear]"
+                        className="absolute inset-0 text-center [clip-path:inset(0_0_50%_0)] animate-[flap-top_60ms_linear]"
                       >
                         {cell.char}
                       </span>
                       <span className="absolute inset-x-0 top-1/2 h-px bg-primary/15" />
                     </>
                   ) : (
-                    <span className="absolute inset-0 text-center">{cell.char}</span>
+                    // A stand-in letter is clipped to the cell, like a real board.
+                    // (clip-path, not overflow: overflow would move the baseline.)
+                    <span className={`absolute inset-0 text-center ${cell.char !== final ? "[clip-path:inset(0)]" : ""}`}>
+                      {cell.char}
+                    </span>
                   )}
                 </span>
               ))}

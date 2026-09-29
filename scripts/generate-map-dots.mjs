@@ -52,8 +52,7 @@ const out = {
   region: { lngMin: LNG_MIN, lngMax: LNG_MAX, latMin: LAT_MIN, latMax: LAT_MAX },
   projection: { lngMin: LNG_MIN, latMax: LAT_MAX, lngScale: round(lngScale * 1000) / 1000, latScale: round(latScale * 1000) / 1000 },
   spacing,
-  // The map renders at ~0.5× its 1000-unit width, so 2.6 units ≈ 1.3px on screen.
-  dotRadius: 2.6,
+  dotRadius: 1.8,
   cities: Object.fromEntries(route.map((stop) => [stop.city, project([stop.lng, stop.lat]).map(round)])),
   dots,
 };
