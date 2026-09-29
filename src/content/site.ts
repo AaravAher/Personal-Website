@@ -233,14 +233,25 @@ export type RouteStop = {
   current?: boolean;
   /** Part of the note that flashes teal when the plane lands, e.g. "Now". */
   noteHighlight?: string;
+  /**
+   * Northward bow of the leg that arrives at this stop, as a share of the
+   * leg's length (default 0.22). Tune arc curvature here, not in the component.
+   */
+  bow?: number;
 };
 
-/** Hero route map, flown in this order. It ends where I am now: Boston. */
+/**
+ * Hero route map, flown in this order; it ends where I am now (Boston).
+ * Each leg is drawn from the previous stop to this one.
+ */
 export const route: RouteStop[] = [
   { city: "Mumbai", lat: 19.08, lng: 72.88, label: "Mumbai", note: "Home" },
-  { city: "Glasgow", lat: 55.86, lng: -4.25, label: "Glasgow", note: "Study abroad" },
-  { city: "Bay Area", lat: 37.77, lng: -122.42, label: "Bay Area", note: "Celona" },
-  { city: "Boston", lat: 42.36, lng: -71.06, label: "Boston", note: "Northeastern · Now", noteHighlight: "Now", current: true },
+  // Longest leg: a gentle bow kept inside the map, passing below Glasgow and above Boston.
+  { city: "Bay Area", lat: 37.77, lng: -122.42, label: "Bay Area", note: "Celona", bow: 0.3 },
+  // East over Canada and Greenland, well above Boston and its label.
+  { city: "Glasgow", lat: 55.86, lng: -4.25, label: "Glasgow", note: "Study abroad", bow: 0.36 },
+  // Westbound across the Atlantic.
+  { city: "Boston", lat: 42.36, lng: -71.06, label: "Boston", note: "Northeastern · Now", noteHighlight: "Now", current: true, bow: 0.22 },
 ];
 
 /** Hero UI copy. */
@@ -250,7 +261,7 @@ export const heroCopy = {
   newTab: "(opens in a new tab)",
   statsLabel: "At a glance",
   availabilityLabel: "Email me about",
-  mapLabel: "Route map: Mumbai to Glasgow to the Bay Area to Boston",
+  mapLabel: "Route map: Mumbai to the Bay Area to Glasgow to Boston",
   scrollCue: "Scroll",
   scrollCueLabel: "Scroll to About",
 };

@@ -2,13 +2,16 @@
 
 import { motion, type Variants } from "framer-motion";
 import { atAGlance, heroClock, heroCopy, personal } from "@/content/site";
-import { SplitFlap } from "./SplitFlap";
+import { FLAP_MAX_SETTLE_MS, SplitFlap } from "./SplitFlap";
 import { AvailabilityDot } from "./AvailabilityDot";
 import { useBostonTime } from "./useBostonTime";
 
 /** When the strip starts flapping (after the name, seal, tagline and buttons). */
 const FLAP_START_MS = 800;
 const STAT_STAGGER_MS = 250;
+/** When the whole strip has settled (ms after the hero mounts). */
+export const STATS_SETTLED_MS =
+  FLAP_START_MS + (atAGlance.length - 1) * STAT_STAGGER_MS + FLAP_MAX_SETTLE_MS;
 
 /** The hero's stats strip: four label/value pairs that flip in like a departures board. */
 export function HeroStats({ variants }: { variants: Variants }) {

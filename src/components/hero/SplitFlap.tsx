@@ -14,6 +14,8 @@ const MAX_STEPS = 14;
     the whole strip still settles in ~2.2s). */
 const CHAR_STAGGER_MS = 35;
 const MAX_TOTAL_STAGGER_MS = 700;
+/** Longest time any value takes to settle once it starts flipping. */
+export const FLAP_MAX_SETTLE_MS = MAX_TOTAL_STAGGER_MS + MAX_STEPS * STEP_MS;
 
 /** Small deterministic PRNG, so a given cell always flips through the same letters. */
 function rand(seed: number) {

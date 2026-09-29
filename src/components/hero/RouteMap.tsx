@@ -5,35 +5,35 @@ import { motion } from "framer-motion";
 import mapData from "@/content/map-dots.json";
 import { heroCopy, route } from "@/content/site";
 import { usePrefersReducedMotion } from "@/components/ui/usePrefersReducedMotion";
+import { STATS_SETTLED_MS } from "./HeroStats";
 
 const [, , W, H] = mapData.viewBox;
 const { lngMin, latMax, lngScale, latScale } = mapData.projection;
 const project = (lng: number, lat: number) => [(lng - lngMin) * lngScale, (latMax - lat) * latScale] as const;
 
 /*
- * Timeline (seconds after the hero mounts). The stats flap from 0.8s to
- * ~3.1s; arcs draw from 1.6s, overlapping the end of the flaps.
+ * The map at rest shows only land and the four cities. Each flight draws the
+ * route leg by leg behind the plane; the previous leg fades as the next one
+ * starts, and the last leg lingers after the landing, then fades.
  */
-const DRAW_START = 1.6;
-const ARC_DURATION = 0.6;
-const FIRST_FLIGHT_GAP_MS = 800; // after the last arc lands
-const FLIGHT_MS = 6200;
-const LANDING_MS = 300; // the plane shrinks into Boston over the last 300ms
-const FLIGHT_EVERY_MS = [14_000, 16_000] as const; // start to start
+const CITIES_POP_AT = 1.2; // s after mount: cities appear with the stats
+const FIRST_FLIGHT_MS = STATS_SETTLED_MS + 600;
+const FLIGHT_EVERY_MS = [16_000, 18_000] as const; // start to start
+// Leg duration grows with its length, so speed stays roughly constant
+// (≈2.9s / 2.2s / 1.7s for the current route).
+const LEG_BASE_MS = 1100;
+const LEG_MS_PER_UNIT = 1.9;
+const STOP_PAUSE_MS = 250; // brief pause at each intermediate stop
+const HANDOFF_MS = 600; // previous leg fades out as the next starts
+const LANDING_MS = 300; // plane shrinks into Boston over the final 300ms
+const LINGER_MS = 1500; // last leg stays visible after landing…
+const FADE_MS = 600; // …then fades, leaving just the cities
 const CONTRAIL = 55; // viewBox units behind the plane (~50px on wide screens)
 
 // Sizes in viewBox units. Boston is ~15% bigger than the other cities.
 const CITY_R = 4;
 const CURRENT_R = 5.75;
 const CURRENT_HALO_R = 10.35;
-
-/** How far each arc bows north, as a share of its length. */
-const BOW: Record<string, number> = {
-  // Over Greenland and northern Canada, well clear of Boston and its label.
-  "Glasgow>Bay Area": 0.36,
-  // A short, gentle eastbound hop.
-  "Bay Area>Boston": 0.12,
-};
 const DEFAULT_BOW = 0.22;
 
 // All of this is static: computed once at module load.
@@ -46,59 +46,56 @@ const STOPS = route.map((stop) => {
   return { ...stop, x, y };
 });
 
-/** Quadratic arcs that bow north (upward), like flight paths. */
-const ARCS = STOPS.slice(1).map((b, i) => {
+/** One quadratic arc per leg, bowing north by the arriving stop's `bow`. */
+const LEGS = STOPS.slice(1).map((b, i) => {
   const a = STOPS[i];
   const len = Math.hypot(b.x - a.x, b.y - a.y);
-  const bow = BOW[`${a.city}>${b.city}`] ?? DEFAULT_BOW;
   const cx = (a.x + b.x) / 2;
-  const cy = (a.y + b.y) / 2 - len * bow;
-  return { d: `M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`, q: `Q${cx},${cy} ${b.x},${b.y}` };
+  const cy = (a.y + b.y) / 2 - len * (b.bow ?? DEFAULT_BOW);
+  return `M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`;
 });
-const FULL_ROUTE = `M${STOPS[0].x},${STOPS[0].y} ${ARCS.map((a) => a.q).join(" ")}`;
+const LAST_LEG = LEGS.length - 1;
 
-/** When each stop appears: the first at the start, the rest as their arc lands. */
-const arrival = (i: number) => DRAW_START + i * ARC_DURATION;
-const FIRST_FLIGHT_MS = arrival(ARCS.length) * 1000 + FIRST_FLIGHT_GAP_MS;
+const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
+// The last leg lingers longer at the end: a softer landing.
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
-/*
- * Flight speed along the route (0 → 1). Eases out of the first city, cruises,
- * dips gently through each stop, and slows right down into the last one.
- * Integrated once into a time → distance table the flight reads from.
- */
-const smooth = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
-function timeTable(stops: number[], samples = 800) {
-  const speed = (s: number) => {
-    const takeoff = 0.25 + 0.75 * smooth(s / 0.12);
-    const landing = 0.1 + 0.9 * smooth((1 - s) / 0.22);
-    const dips = stops.reduce((f, at) => f * (1 - 0.45 * Math.exp(-(((s - at) / 0.035) ** 2))), 1);
-    return takeoff * landing * dips;
-  };
-  const times = [0];
-  for (let i = 1; i <= samples; i++) times.push(times[i - 1] + 1 / samples / speed((i - 0.5) / samples));
-  const total = times[samples];
-  return times.map((t) => t / total);
-}
-/** Distance share travelled at a time share, by binary search in the table. */
-function distanceAt(times: number[], t: number) {
-  let lo = 0;
-  let hi = times.length - 1;
-  while (hi - lo > 1) {
-    const mid = (lo + hi) >> 1;
-    if (times[mid] < t) lo = mid;
-    else hi = mid;
-  }
-  const f = (t - times[lo]) / (times[hi] - times[lo] || 1);
-  return (lo + f) / (times.length - 1);
+type Segment =
+  | { kind: "fly"; leg: number; start: number; dur: number }
+  | { kind: "pause"; leg: number; start: number; dur: number }
+  | { kind: "linger"; start: number; dur: number }
+  | { kind: "fade"; start: number; dur: number };
+
+/** The whole flight as a timeline of segments (ms from take-off). */
+function buildTimeline(legLengths: number[]) {
+  const segments: Segment[] = [];
+  const legStart: number[] = [];
+  let t = 0;
+  legLengths.forEach((len, leg) => {
+    const dur = LEG_BASE_MS + len * LEG_MS_PER_UNIT;
+    legStart.push(t);
+    segments.push({ kind: "fly", leg, start: t, dur });
+    t += dur;
+    if (leg < LAST_LEG) {
+      segments.push({ kind: "pause", leg, start: t, dur: STOP_PAUSE_MS });
+      t += STOP_PAUSE_MS;
+    }
+  });
+  const landedAt = t;
+  segments.push({ kind: "linger", start: t, dur: LINGER_MS });
+  t += LINGER_MS;
+  segments.push({ kind: "fade", start: t, dur: FADE_MS });
+  t += FADE_MS;
+  return { segments, legStart, landedAt, total: t };
 }
 
 /**
- * Where each label sits relative to its dot, chosen so labels clear the arcs,
+ * Where each label sits relative to its dot, chosen so labels clear every leg,
  * each other and the map's edges (Bay Area and Mumbai sit near the sides).
  */
 const LABEL_PLACEMENT: Record<string, string> = {
   Mumbai: "right-[-6px] top-[10px] text-right",
-  // Above, shifted right: the Bay Area arc leaves Glasgow steeply up-left.
+  // Above, shifted right: the legs to and from Glasgow run up and to the left.
   Glasgow: "left-[-4px] bottom-[10px] text-left",
   Boston: "left-[14px] top-[-2px] text-left",
   "Bay Area": "left-[-6px] top-[10px] text-left",
@@ -108,7 +105,8 @@ const LABEL_PLACEMENT: Record<string, string> = {
 const PLANE =
   "M9,0 L3,-1.3 L-1,-7.5 L-3.2,-7.5 L-1.3,-1.5 L-6,-1.6 L-7.8,-4.2 L-9.2,-4.2 L-8,0 L-9.2,4.2 L-7.8,4.2 L-6,1.6 L-1.3,1.5 L-3.2,7.5 L-1,7.5 L3,1.3 Z";
 
-const PASS_PULSE = "animate-[pulse-ring_1.4s_ease-out]";
+const ARRIVAL_PULSE = "animate-[pulse-ring_1.4s_ease-out]";
+const LABEL_BRIGHTEN = "animate-[label-brighten_1.2s_ease-out]";
 const LANDED_PULSE = "animate-[landed-pulse_1.6s_ease-out]";
 const NOW_FLASH = "animate-[now-flash_1.2s_ease-out]";
 
@@ -123,108 +121,175 @@ function replay(el: Element | null | undefined, cls: string) {
 export function RouteMap({ className = "" }: { className?: string }) {
   const reduce = usePrefersReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
-  const routeRef = useRef<SVGPathElement>(null);
+  const legRefs = useRef<(SVGPathElement | null)[]>([]);
+  const legMaskRefs = useRef<(SVGPathElement | null)[]>([]);
   const planeRef = useRef<SVGGElement>(null);
   const contrailRef = useRef<SVGPathElement>(null);
   const gradientRef = useRef<SVGLinearGradientElement>(null);
-  const passRefs = useRef<(SVGCircleElement | null)[]>([]);
+  const pulseRefs = useRef<(SVGCircleElement | null)[]>([]);
+  const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const landedRef = useRef<SVGCircleElement>(null);
   const nowRef = useRef<HTMLSpanElement>(null);
 
-  // The plane: flies Mumbai → … → Boston every 14–16s, landing in Boston.
-  // Runs only while the map is on screen and the tab is visible.
+  // Flights: timeline-driven, so pausing (off-screen or hidden tab) simply
+  // stops the clock and resuming continues from the exact same moment.
   useEffect(() => {
     if (reduce) return;
     const root = rootRef.current;
-    const path = routeRef.current;
     const plane = planeRef.current;
     const contrail = contrailRef.current;
     const gradient = gradientRef.current;
-    if (!root || !path || !plane || !contrail || !gradient) return;
+    const legs = legRefs.current;
+    const masks = legMaskRefs.current;
+    if (!root || !plane || !contrail || !gradient || legs.some((l) => !l) || masks.some((m) => !m)) return;
 
-    const total = path.getTotalLength();
-    // Where each intermediate stop falls along the route (share of length).
-    const stopsAt = ARCS.slice(0, -1).map((_, i) => {
-      const probe = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      probe.setAttribute("d", `M${STOPS[0].x},${STOPS[0].y} ${ARCS.slice(0, i + 1).map((a) => a.q).join(" ")}`);
-      return probe.getTotalLength() / total;
-    });
-    const times = timeTable(stopsAt);
+    const lengths = legs.map((l) => l!.getTotalLength());
+    const { segments, legStart, landedAt, total } = buildTimeline(lengths);
 
-    let inView = false;
-    let visible = document.visibilityState === "visible";
-    let timer: number | undefined;
-    let frame = 0;
-    const mountedAt = performance.now();
-
-    const hide = () => {
+    const setLeg = (i: number, reveal: number, opacity: number) => {
+      masks[i]!.setAttribute("stroke-dashoffset", String(1 - reveal));
+      legs[i]!.setAttribute("opacity", String(opacity));
+    };
+    const hideAll = () => {
+      legs.forEach((_, i) => setLeg(i, 0, 0));
       plane.setAttribute("opacity", "0");
       contrail.setAttribute("opacity", "0");
     };
-    const stop = () => {
-      window.clearTimeout(timer);
-      cancelAnimationFrame(frame);
-      hide();
+
+    const placePlane = (leg: number, at: number, scale: number) => {
+      const path = legs[leg]!;
+      const len = lengths[leg];
+      const pt = path.getPointAtLength(at);
+      const ahead = path.getPointAtLength(Math.min(len, at + 1));
+      const behind = path.getPointAtLength(Math.max(0, at - 1));
+      const angle = (Math.atan2(ahead.y - behind.y, ahead.x - behind.x) * 180) / Math.PI;
+      plane.setAttribute("transform", `translate(${pt.x} ${pt.y}) rotate(${angle}) scale(${scale})`);
+      plane.setAttribute("opacity", String(scale));
+
+      // Contrail: the last CONTRAIL units of this leg, fading toward the tail.
+      const tailAt = Math.max(0, at - CONTRAIL);
+      const tail = path.getPointAtLength(tailAt);
+      contrail.setAttribute("d", LEGS[leg]);
+      contrail.setAttribute("stroke-dasharray", `${at - tailAt} ${len * 2}`);
+      contrail.setAttribute("stroke-dashoffset", String(-tailAt));
+      contrail.setAttribute("opacity", String(scale));
+      gradient.setAttribute("x1", String(tail.x));
+      gradient.setAttribute("y1", String(tail.y));
+      gradient.setAttribute("x2", String(pt.x));
+      gradient.setAttribute("y2", String(pt.y));
     };
-    const schedule = (ms: number) => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(fly, ms);
-    };
-    const nextGap = () =>
-      FLIGHT_EVERY_MS[0] + Math.random() * (FLIGHT_EVERY_MS[1] - FLIGHT_EVERY_MS[0]) - FLIGHT_MS;
 
-    function fly() {
-      const start = performance.now();
-      const passed = stopsAt.map(() => false);
-      const landingFrom = 1 - LANDING_MS / FLIGHT_MS;
-      const step = (now: number) => {
-        const t = Math.min(1, (now - start) / FLIGHT_MS);
-        const at = distanceAt(times, t) * total;
-        const pt = path!.getPointAtLength(at);
-        const ahead = path!.getPointAtLength(Math.min(total, at + 1));
-        const behind = path!.getPointAtLength(Math.max(0, at - 1));
-        const angle = (Math.atan2(ahead.y - behind.y, ahead.x - behind.x) * 180) / Math.PI;
-        // Over the final 300ms the plane shrinks and fades into Boston.
-        const k = t < landingFrom ? 1 : Math.max(0, (1 - t) / (1 - landingFrom));
-        plane!.setAttribute("transform", `translate(${pt.x} ${pt.y}) rotate(${angle}) scale(${k})`);
-        plane!.setAttribute("opacity", String(k));
+    /** Draw the flight as it looks `e` ms after take-off. */
+    const render = (e: number) => {
+      const seg = segments.findLast((s) => s.start <= e) ?? segments[0];
+      const leg = seg.kind === "fly" || seg.kind === "pause" ? seg.leg : LAST_LEG;
 
-        // Contrail: the last CONTRAIL units of the route, fading toward the tail.
-        const tailAt = Math.max(0, at - CONTRAIL);
-        const tail = path!.getPointAtLength(tailAt);
-        contrail!.setAttribute("stroke-dasharray", `${at - tailAt} ${total * 2}`);
-        contrail!.setAttribute("stroke-dashoffset", String(-tailAt));
-        contrail!.setAttribute("opacity", String(k));
-        gradient!.setAttribute("x1", String(tail.x));
-        gradient!.setAttribute("y1", String(tail.y));
-        gradient!.setAttribute("x2", String(pt.x));
-        gradient!.setAttribute("y2", String(pt.y));
-
-        // Soft pulse on each stop as the plane passes through.
-        stopsAt.forEach((share, i) => {
-          if (!passed[i] && at / total >= share) {
-            passed[i] = true;
-            replay(passRefs.current[i + 1], PASS_PULSE);
-          }
-        });
-
-        if (t < 1) {
-          frame = requestAnimationFrame(step);
-        } else {
-          hide();
-          replay(landedRef.current, LANDED_PULSE);
-          replay(nowRef.current, NOW_FLASH);
-          schedule(nextGap());
+      LEGS.forEach((_, i) => {
+        if (i > leg) return setLeg(i, 0, 0);
+        if (i < leg - 1) return setLeg(i, 1, 0);
+        if (i === leg - 1) {
+          // Handoff: the previous leg fades as this one starts drawing.
+          return setLeg(i, 1, Math.max(0, 1 - (e - legStart[leg]) / HANDOFF_MS));
         }
-      };
-      frame = requestAnimationFrame(step);
+        // The current leg: revealed up to the plane, then kept until the fade.
+        const reveal = seg.kind === "fly" ? progressOf(seg, e) : 1;
+        const opacity = seg.kind === "fade" ? Math.max(0, 1 - (e - seg.start) / seg.dur) : 1;
+        setLeg(i, reveal, opacity);
+      });
+
+      if (seg.kind === "fly") {
+        const p = progressOf(seg, e);
+        const intoLanding = seg.leg === LAST_LEG ? (seg.start + seg.dur - e) / LANDING_MS : 1;
+        placePlane(seg.leg, p * lengths[seg.leg], Math.max(0, Math.min(1, intoLanding)));
+      } else if (seg.kind === "pause") {
+        placePlane(seg.leg, lengths[seg.leg], 1);
+      } else {
+        plane.setAttribute("opacity", "0");
+        contrail.setAttribute("opacity", "0");
+      }
+    };
+    function progressOf(seg: Segment, e: number) {
+      if (seg.kind !== "fly") return 1;
+      const t = Math.min(1, Math.max(0, (e - seg.start) / seg.dur));
+      return seg.leg === LAST_LEG ? easeInOutCubic(t) : easeInOutSine(t);
     }
 
-    const sync = () => {
-      stop();
-      if (inView && visible) schedule(Math.max(600, FIRST_FLIGHT_MS - (performance.now() - mountedAt)));
+    // One-off moments: arrivals at intermediate stops, and the landing.
+    const moments = [
+      ...legStart.slice(1).map((start, i) => ({
+        at: start - STOP_PAUSE_MS,
+        run: () => {
+          replay(pulseRefs.current[i + 1], ARRIVAL_PULSE);
+          replay(labelRefs.current[i + 1], LABEL_BRIGHTEN);
+        },
+      })),
+      {
+        at: landedAt,
+        run: () => {
+          replay(landedRef.current, LANDED_PULSE);
+          replay(nowRef.current, NOW_FLASH);
+        },
+      },
+    ];
+
+    // Clock state survives pauses.
+    let active = false;
+    let inView = false;
+    let visible = document.visibilityState === "visible";
+    let flying = false;
+    let elapsed = 0; // ms into the current flight
+    let fired = 0; // moments already run this flight
+    let waitLeft = FIRST_FLIGHT_MS; // ms until the next take-off
+    let waitFrom = 0;
+    let lastFrame = 0;
+    let frame = 0;
+    let timer: number | undefined;
+
+    const tick = (now: number) => {
+      elapsed += now - lastFrame;
+      lastFrame = now;
+      while (fired < moments.length && elapsed >= moments[fired].at) moments[fired++].run();
+      if (elapsed >= total) {
+        hideAll();
+        flying = false;
+        const every = FLIGHT_EVERY_MS[0] + Math.random() * (FLIGHT_EVERY_MS[1] - FLIGHT_EVERY_MS[0]);
+        waitLeft = Math.max(0, every - total);
+        waitForTakeoff();
+        return;
+      }
+      render(elapsed);
+      frame = requestAnimationFrame(tick);
+    };
+    const takeOff = () => {
+      flying = true;
+      elapsed = 0;
+      fired = 0;
+      fly();
+    };
+    const fly = () => {
+      lastFrame = performance.now();
+      frame = requestAnimationFrame(tick);
+    };
+    const waitForTakeoff = () => {
+      waitFrom = performance.now();
+      timer = window.setTimeout(takeOff, waitLeft);
     };
 
+    const sync = () => {
+      const next = inView && visible;
+      if (next === active) return;
+      active = next;
+      if (active) {
+        if (flying) fly();
+        else waitForTakeoff();
+      } else {
+        cancelAnimationFrame(frame);
+        window.clearTimeout(timer);
+        if (!flying) waitLeft = Math.max(0, waitLeft - (performance.now() - waitFrom));
+      }
+    };
+
+    hideAll();
     const io = new IntersectionObserver(([entry]) => {
       inView = entry.isIntersecting;
       sync();
@@ -238,7 +303,8 @@ export function RouteMap({ className = "" }: { className?: string }) {
     return () => {
       io.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
-      stop();
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
     };
   }, [reduce]);
 
@@ -250,12 +316,12 @@ export function RouteMap({ className = "" }: { className?: string }) {
       : {
           initial: { scale: 0 },
           animate: { scale: 1 },
-          transition: { delay: arrival(i), type: "spring" as const, stiffness: 520, damping: 16 },
+          transition: { delay: CITIES_POP_AT + i * 0.1, type: "spring" as const, stiffness: 520, damping: 16 },
         };
   const fade = (i: number) =>
     reduce
       ? { initial: false as const }
-      : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: arrival(i) + 0.1, duration: 0.35 } };
+      : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: CITIES_POP_AT + i * 0.1 + 0.1, duration: 0.35 } };
 
   const fromCentre = "[transform-box:fill-box] [transform-origin:center]";
 
@@ -270,56 +336,75 @@ export function RouteMap({ className = "" }: { className?: string }) {
       >
         <path d={DOTS_PATH} className="fill-primary/[0.24]" />
 
-        <defs>
-          {ARCS.map((arc, i) => (
-            <mask key={i} id={`route-arc-mask-${i}`} maskUnits="userSpaceOnUse" x={-50} y={-150} width={W + 100} height={H + 250}>
-              <motion.path
-                d={arc.d}
+        {reduce ? (
+          // Reduced motion: the whole story, static and quiet.
+          LEGS.map((d, i) => (
+            <path
+              key={i}
+              d={d}
+              fill="none"
+              strokeWidth={2}
+              strokeDasharray="3 9"
+              strokeLinecap="round"
+              className="stroke-primary/35"
+            />
+          ))
+        ) : (
+          <>
+            <defs>
+              {/* Each leg is revealed up to the plane: pathLength 1, so the
+                  dash offset is simply 1 − progress along that same path. */}
+              {LEGS.map((d, i) => (
+                <mask key={i} id={`route-leg-mask-${i}`} maskUnits="userSpaceOnUse" x={-50} y={-150} width={W + 100} height={H + 250}>
+                  <path
+                    ref={(el) => {
+                      legMaskRefs.current[i] = el;
+                    }}
+                    d={d}
+                    fill="none"
+                    stroke="white"
+                    strokeWidth={12}
+                    pathLength={1}
+                    strokeDasharray="1 1"
+                    strokeDashoffset={1}
+                  />
+                </mask>
+              ))}
+              <linearGradient ref={gradientRef} id="route-contrail" gradientUnits="userSpaceOnUse">
+                <stop offset="0" style={{ stopColor: "var(--color-accent)", stopOpacity: 0 }} />
+                <stop offset="1" style={{ stopColor: "var(--color-accent)", stopOpacity: 0.8 }} />
+              </linearGradient>
+            </defs>
+
+            {/* Dashed legs: invisible at rest, drawn behind the plane. */}
+            {LEGS.map((d, i) => (
+              <path
+                key={i}
+                ref={(el) => {
+                  legRefs.current[i] = el;
+                }}
+                d={d}
                 fill="none"
-                stroke="white"
-                strokeWidth={12}
+                strokeWidth={2}
+                strokeDasharray="3 9"
                 strokeLinecap="round"
-                {...(reduce
-                  ? { initial: false as const }
-                  : {
-                      initial: { pathLength: 0 },
-                      animate: { pathLength: 1 },
-                      transition: { delay: arrival(i), duration: ARC_DURATION, ease: "easeInOut" as const },
-                    })}
+                className="stroke-primary/[0.62]"
+                mask={`url(#route-leg-mask-${i})`}
+                opacity={0}
               />
-            </mask>
-          ))}
-          <linearGradient ref={gradientRef} id="route-contrail" gradientUnits="userSpaceOnUse">
-            <stop offset="0" style={{ stopColor: "var(--color-accent)", stopOpacity: 0 }} />
-            <stop offset="1" style={{ stopColor: "var(--color-accent)", stopOpacity: 0.8 }} />
-          </linearGradient>
-        </defs>
+            ))}
 
-        {/* Dashed flight paths, revealed by the masks above. */}
-        {ARCS.map((arc, i) => (
-          <path
-            key={i}
-            d={arc.d}
-            fill="none"
-            strokeWidth={2}
-            strokeDasharray="3 9"
-            strokeLinecap="round"
-            className="stroke-primary/[0.62]"
-            mask={`url(#route-arc-mask-${i})`}
-          />
-        ))}
-
-        {/* The route the plane follows, and its contrail (drawn from the same path). */}
-        <path ref={routeRef} d={FULL_ROUTE} fill="none" stroke="none" />
-        <path
-          ref={contrailRef}
-          d={FULL_ROUTE}
-          fill="none"
-          stroke="url(#route-contrail)"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          opacity={0}
-        />
+            <path
+              ref={contrailRef}
+              d={LEGS[0]}
+              fill="none"
+              stroke="url(#route-contrail)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              opacity={0}
+            />
+          </>
+        )}
 
         {STOPS.map((stop, i) =>
           stop.current ? (
@@ -341,7 +426,7 @@ export function RouteMap({ className = "" }: { className?: string }) {
                 className={`fill-accent opacity-0 ${fromCentre} ${
                   reduce ? "" : "animate-[pulse-ring_2.4s_ease-out_infinite]"
                 }`}
-                style={reduce ? undefined : { animationDelay: `${arrival(i) + 0.4}s` }}
+                style={reduce ? undefined : { animationDelay: `${CITIES_POP_AT + 0.6}s` }}
               />
               {/* One-shot "landed" pulse, wider than the idle one. */}
               <circle ref={landedRef} cx={stop.x} cy={stop.y} r={CURRENT_R} className={`fill-accent opacity-0 ${fromCentre}`} />
@@ -349,10 +434,10 @@ export function RouteMap({ className = "" }: { className?: string }) {
             </g>
           ) : (
             <g key={stop.city}>
-              {/* Soft pulse as the plane passes. */}
+              {/* Pulses once as the plane arrives. */}
               <circle
                 ref={(el) => {
-                  passRefs.current[i] = el;
+                  pulseRefs.current[i] = el;
                 }}
                 cx={stop.x}
                 cy={stop.y}
@@ -365,9 +450,11 @@ export function RouteMap({ className = "" }: { className?: string }) {
         )}
 
         {/* The plane. Hidden between flights. */}
-        <g ref={planeRef} opacity={0} aria-hidden>
-          <path d={PLANE} className="fill-primary" />
-        </g>
+        {!reduce && (
+          <g ref={planeRef} opacity={0} aria-hidden>
+            <path d={PLANE} className="fill-primary" />
+          </g>
+        )}
       </svg>
 
       {/* Labels are HTML so they stay crisp. They grow with the map, capped at 14px / 13px. */}
@@ -381,11 +468,16 @@ export function RouteMap({ className = "" }: { className?: string }) {
             style={{ left: `${(stop.x / W) * 100}%`, top: `${(stop.y / H) * 100}%` }}
             {...fade(i)}
           >
-            <div className={`absolute w-max ${LABEL_PLACEMENT[stop.city] ?? "left-[10px] top-[10px]"}`}>
-              <p className="text-[clamp(10px,1.95cqw,14px)] font-medium uppercase leading-tight tracking-[0.18em] text-primary-soft">
+            <div
+              ref={(el) => {
+                labelRefs.current[i] = el;
+              }}
+              className={`absolute w-max text-primary-soft ${LABEL_PLACEMENT[stop.city] ?? "left-[10px] top-[10px]"}`}
+            >
+              <p className="text-[clamp(10px,1.95cqw,14px)] font-medium uppercase leading-tight tracking-[0.18em]">
                 {stop.label}
               </p>
-              <p className="text-[clamp(10px,1.8cqw,13px)] leading-tight text-primary-soft">
+              <p className="text-[clamp(10px,1.8cqw,13px)] leading-tight">
                 {before}
                 {after !== undefined && (
                   <>

@@ -187,3 +187,14 @@ body {
     color: var(--color-primary-soft);
   }
 }
+
+/* A city's label brightens as the plane arrives, then settles back. */
+@keyframes label-brighten {
+  0%,
+  35% {
+    color: var(--color-primary);
+  }
+  100% {
+    color: var(--color-primary-soft);
+  }
+}
