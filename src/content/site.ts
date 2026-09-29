@@ -99,9 +99,12 @@ export type ExperienceCard = {
   slug: string;
   company: string;
   role: string;
-  location?: string;
+  location: string;
   dates: string;
+  /** Resume text, shown on the back of the flip card. */
   summary: string;
+  /** Big number on the back of the flip card. */
+  highlight: Metric;
 };
 
 export type LinkedItem = {
@@ -189,6 +192,8 @@ export const heroCopy = {
 
 /** Nav UI copy. */
 export const navCopy = {
+  allWork: "All work",
+  workMenuLabel: "Case studies",
   resume: "Resume",
   resumeLabel: "Resume (opens PDF in a new tab)",
   skipLink: "Skip to content",
@@ -396,19 +401,29 @@ export const otherExperience: ExperienceCard[] = [
     company: "Scorpio India",
     role: "Intern (Part-Time)",
     location: "Mumbai, India",
-    dates: "Jul 2024",
+    dates: "July 2024",
     summary:
-      "Managed payment negotiations with 3 major vessel clients, issued 2 legal notices, and sped up claim resolution by 7+ days while keeping client relationships intact.",
+      "Managed payment negotiations with 3 major vessel clients, issuing 2 legal notices and accelerating claim resolution by 7+ days while preserving long-term client relationships and future shipping orders.",
+    highlight: { value: "7+ days", label: "faster claim resolution" },
   },
   {
     slug: "scholastic",
     company: "Scholastic India",
     role: "HR Intern (Part-Time, School Partnership)",
+    location: "India",
     dates: "2023 – 2024",
     summary:
-      "Coordinated a book launch event with 1,000+ guests, covering logistics, vendors and on-the-day execution.",
+      "Partnered with HR leadership to coordinate a major book launch event attended by over 1,000 guests, managing logistics, vendor coordination, and on-the-day execution.",
+    highlight: { value: "1,000+", label: "guests" },
   },
 ];
+
+/** Copy for the Other Experience flip cards. */
+export const experienceSection = {
+  eyebrow: "Also",
+  title: "Other experience",
+  flipHint: "Flip for details",
+};
 
 export const awardsAndProjects: AwardsAndProjects = {
   coursework: [

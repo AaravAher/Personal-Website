@@ -4,6 +4,7 @@ import { About } from "@/components/About";
 import { SectionPlaceholder } from "@/components/SectionPlaceholder";
 import { Footer } from "@/components/Footer";
 import { Work } from "@/components/case-study/Work";
+import { OtherExperience } from "@/components/experience/OtherExperience";
 
 export default function Home() {
   return (
@@ -14,14 +15,7 @@ export default function Home() {
         <About />
 
         <Work />
-        <SectionPlaceholder
-          id="experience"
-          index="03"
-          eyebrow="Also"
-          title="Other experience"
-          contents={["Scorpio India", "Scholastic India"]}
-          tone="deep"
-        />
+        <OtherExperience />
         <SectionPlaceholder
           id="projects"
           index="04"
