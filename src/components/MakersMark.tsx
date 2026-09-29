@@ -1,14 +1,57 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { makersMark, personal } from "@/content/site";
 
-const R = 46; // radius of the text path, in a 112-unit viewBox
-const CIRCUMFERENCE = 2 * Math.PI * R;
+/*
+ * Geometry, in a 200 × 200 viewBox centred on (100, 100).
+ * The ring text runs clockwise along a circle of radius 80, starting at
+ * 12 o'clock. The inner ring (r 58) leaves ≥ 10 units below the letters.
+ */
+const R = 80;
+const CIRCUMFERENCE = 2 * Math.PI * R; // ≈ 502.65
+const FONT_SIZE = 13;
+const RING_PATH = `M 100,${100 - R} a ${R},${R} 0 1,1 0,${R * 2} a ${R},${R} 0 1,1 0,-${R * 2}`;
+// Fixed, valid ids (no useId colons/special characters), one per variant
+// so the two instances never duplicate an id.
+const pathId = (size: string) => `makers-mark-ring-${size}`;
+
+/*
+ * Inter 500 advance widths (em), measured from the site's font. Used to
+ * compute the letter-spacing that makes the text close the loop exactly.
+ * This is pure arithmetic at render time: no DOM measurement, so it can't
+ * race font or CSS loading and can never produce negative spacing.
+ */
+const ADVANCE: Record<string, number> = {
+  A: 0.709, B: 0.657, C: 0.734, D: 0.722, E: 0.603, F: 0.589, G: 0.748, H: 0.744,
+  I: 0.273, J: 0.575, K: 0.688, L: 0.565, M: 0.913, N: 0.756, O: 0.767, P: 0.642,
+  Q: 0.769, R: 0.648, S: 0.646, T: 0.653, U: 0.74, V: 0.709, W: 1.003, X: 0.701,
+  Y: 0.696, Z: 0.641, "0": 0.645, "1": 0.415, "2": 0.616, "3": 0.627, "4": 0.656,
+  "5": 0.603, "6": 0.63, "7": 0.571, "8": 0.629, "9": 0.63, " ": 0.266, "·": 0.303,
+  "&": 0.653, "'": 0.313, "’": 0.277, ",": 0.303, ".": 0.303, "-": 0.463, "–": 0.5,
+  "—": 1, ":": 0.303, "/": 0.37,
+};
+const FALLBACK_ADVANCE = 0.65;
+
+function ringLetterSpacing(text: string) {
+  const chars = [...text.toUpperCase()];
+  const natural = chars.reduce((sum, ch) => sum + (ADVANCE[ch] ?? FALLBACK_ADVANCE), 0) * FONT_SIZE;
+  // Spacing follows every glyph (including the last), so the loop closes.
+  return Math.max(0, (CIRCUMFERENCE - natural) / chars.length);
+}
+
+const RING_SPACING = ringLetterSpacing(makersMark.ring);
 
 const canHover = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+const SIZES = {
+  /** Beside the name: 104px on tablet widths, 128px from lg. */
+  inline: "h-[104px] w-[104px] lg:h-32 lg:w-32",
+  /** Below the buttons on narrow screens. */
+  stacked: "h-24 w-24",
+};
 
 /**
  * A watchmaker-style seal: "designed · built · written by" running around a
@@ -16,31 +59,18 @@ const canHover = () =>
  * or focus (tap on touch) pauses it, turns it teal and shows the tooltip.
  * Motion is CSS-only, so reduced motion simply disables the animations.
  */
-/** "sm": 84px. "fluid": 84px, growing to 112px from lg up (next to the name). */
-export function MakersMark({ size, className = "" }: { size: "sm" | "fluid"; className?: string }) {
-  const pathId = useId();
+export function MakersMark({
+  size,
+  tooltipAlign = "center",
+  className = "",
+}: {
+  size: keyof typeof SIZES;
+  tooltipAlign?: "center" | "start";
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const lastPointer = useRef("mouse");
   const ref = useRef<HTMLButtonElement>(null);
-  const textRef = useRef<SVGTextElement>(null);
-
-  // Spread the ring text so it closes the loop exactly. (Chrome ignores
-  // textLength on <textPath>, so letter-spacing is measured and set instead.)
-  useEffect(() => {
-    let cancelled = false;
-    document.fonts.ready.then(() => {
-      const text = textRef.current;
-      const path = text?.querySelector("textPath");
-      if (cancelled || !text || !path) return;
-      text.style.letterSpacing = "0px";
-      const natural = path.getComputedTextLength();
-      const chars = [...makersMark.ring].length;
-      text.style.letterSpacing = `${(CIRCUMFERENCE - natural) / chars}px`;
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // A tap outside closes a tooltip opened by tap.
   useEffect(() => {
@@ -70,39 +100,38 @@ export function MakersMark({ size, className = "" }: { size: "sm" | "fluid"; cla
         if (lastPointer.current !== "mouse" || !canHover()) setOpen((o) => !o);
       }}
       onBlur={() => setOpen(false)}
-      className={`group relative block shrink-0 rounded-full ${
-        size === "fluid" ? "h-[84px] w-[84px] lg:h-28 lg:w-28" : "h-[84px] w-[84px]"
-      } ${className}`}
+      className={`group relative block shrink-0 rounded-full ${SIZES[size]} ${className}`}
     >
       {/* Stamp-in, after the name has animated. */}
       <span className="relative block h-full w-full animate-[stamp-in_250ms_ease-out_450ms_both] motion-reduce:animate-none">
-        <svg
-          aria-hidden
-          viewBox="0 0 112 112"
-          className={`absolute inset-0 h-full w-full text-primary transition-colors duration-300 animate-[spin_40s_linear_infinite] motion-reduce:animate-none ${active} ${paused}`}
-        >
+        <svg aria-hidden viewBox="0 0 200 200" className="absolute inset-0 h-full w-full overflow-visible">
           <defs>
-            <path
-              id={pathId}
-              d={`M 56,56 m -${R},0 a ${R},${R} 0 1,1 ${R * 2},0 a ${R},${R} 0 1,1 -${R * 2},0`}
-            />
+            <path id={pathId(size)} d={RING_PATH} />
           </defs>
-          {/* 1.5 letter-spacing is the pre-measurement estimate for Inter at 7.5. */}
-          <text
-            ref={textRef}
-            className="fill-current font-sans text-[7.5px] font-medium uppercase"
-            style={{ letterSpacing: "1.5px" }}
+
+          {/* Only this group turns, around the viewBox centre (100, 100). */}
+          <g
+            className={`text-primary transition-colors duration-300 [transform-box:view-box] [transform-origin:center] animate-[spin_40s_linear_infinite] motion-reduce:animate-none ${active} ${paused}`}
           >
-            <textPath href={`#${pathId}`}>{makersMark.ring}</textPath>
-          </text>
+            <text
+              fill="currentColor"
+              fontSize={FONT_SIZE}
+              fontWeight={500}
+              letterSpacing={RING_SPACING}
+              dominantBaseline="central"
+              className="font-sans uppercase"
+            >
+              <textPath href={`#${pathId(size)}`}>{makersMark.ring}</textPath>
+            </text>
+          </g>
+
+          <circle cx="100" cy="100" r="58" fill="none" strokeWidth="1.25" className="stroke-primary/25" />
         </svg>
-        <svg aria-hidden viewBox="0 0 112 112" className="absolute inset-0 h-full w-full">
-          <circle cx="56" cy="56" r="36" fill="none" className="stroke-primary/25" strokeWidth="0.75" />
-        </svg>
+
         <span
           aria-hidden
           className={`absolute inset-0 flex items-center justify-center font-serif leading-none tracking-tight text-primary ${
-            size === "fluid" ? "text-[1.3rem] lg:text-[1.75rem]" : "text-[1.3rem]"
+            size === "inline" ? "text-[1.6rem] lg:text-[2rem]" : "text-[1.5rem]"
           }`}
         >
           {personal.monogram}
@@ -113,7 +142,7 @@ export function MakersMark({ size, className = "" }: { size: "sm" | "fluid"; cla
       <span
         aria-hidden
         className={`pointer-events-none absolute top-full z-10 mt-3 w-56 rounded-md bg-primary px-3 py-2 text-left text-xs leading-snug text-cream opacity-0 shadow-lg shadow-primary/20 transition-opacity duration-200 can-hover:group-hover:opacity-100 group-focus-visible:opacity-100 group-data-[open=true]:opacity-100 ${
-          size === "fluid" ? "left-1/2 -translate-x-1/2" : "left-0"
+          tooltipAlign === "center" ? "left-1/2 -translate-x-1/2" : "left-0"
         }`}
       >
         {makersMark.tooltip}

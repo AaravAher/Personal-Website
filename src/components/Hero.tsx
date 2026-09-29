@@ -43,17 +43,18 @@ export function Hero() {
           {personal.overline}
         </motion.p>
 
-        {/* Name block: shrink-wrapped so the seal anchors to the end of the name. */}
-        <div className="relative mt-5 self-start">
+        {/* Name and seal side by side from 900px, with a fixed 48px gap so the
+            seal can never touch the name. */}
+        <div className="mt-5 flex items-center gap-12">
           <motion.h1
             variants={item}
             className="font-serif text-[clamp(3.5rem,9vw,7.5rem)] leading-[0.95] tracking-[-0.02em] text-primary"
           >
             {first} <em className="italic">{rest.join(" ")}</em>
           </motion.h1>
-          {/* Centred on the name so it clears the overline above and the tagline below. */}
-          <div className="absolute left-full top-1/2 ml-4 hidden -translate-y-1/2 sm:block lg:ml-6">
-            <MakersMark size="fluid" />
+          {/* -3px: centres the seal on the letters' cap height rather than the line box. */}
+          <div className="hidden -translate-y-[3px] min-[900px]:block">
+            <MakersMark size="inline" />
           </div>
         </div>
 
@@ -82,8 +83,8 @@ export function Hero() {
           </Button>
         </motion.div>
 
-        {/* Phones: no room beside the name, so the seal sits under the buttons. */}
-        <MakersMark size="sm" className="mt-8 sm:hidden" />
+        {/* Below 900px there isn't room beside the name: the seal sits under the buttons. */}
+        <MakersMark size="stacked" tooltipAlign="start" className="mt-8 min-[900px]:hidden" />
 
         <motion.a
           variants={item}

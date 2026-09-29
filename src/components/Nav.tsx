@@ -1,13 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ChevronDown, FileText, Menu, X } from "lucide-react";
-import { caseStudies, nav, navCopy, personal } from "@/content/site";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, FileText, Menu, X } from "lucide-react";
+import { nav, navCopy, navMenus, personal } from "@/content/site";
 import { Button } from "@/components/ui/Button";
-import { usePrefersReducedMotion } from "@/components/ui/usePrefersReducedMotion";
-
-const WORK_MENU_ID = "work-menu";
+import { NavDropdown } from "@/components/NavDropdown";
 
 /**
  * Sections on the page mapped to the nav link they light up.
@@ -25,92 +22,33 @@ const SECTION_TO_NAV: Record<string, string> = {
   contact: "#contact",
 };
 
-const WORK_HREF = "#work";
-/** Hover intent: open after a short hover, close after leaving link and panel. */
-const OPEN_DELAY = 80;
-const CLOSE_DELAY = 180;
-
-/**
- * Compact dropdown under the Work link: one row per case study.
- * Its ::before bridges the 8px gap so the pointer never "leaves" on the way in.
- */
-function WorkDropdown({
-  ref,
-  onNavigate,
-  onKeyDown,
-}: {
-  ref: React.Ref<HTMLDivElement>;
-  onNavigate: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
-}) {
-  const reduce = usePrefersReducedMotion();
-  const hidden = { opacity: 0, y: reduce ? 0 : -4 };
-  return (
-    <motion.div
-      ref={ref}
-      id={WORK_MENU_ID}
-      role="region"
-      aria-label={navCopy.workMenuLabel}
-      onKeyDown={onKeyDown}
-      className="absolute left-0 top-full mt-2 w-[260px] rounded-lg border border-primary/15 bg-base p-1.5 shadow-lg shadow-primary/10 before:absolute before:inset-x-0 before:-top-2 before:h-2"
-      initial={hidden}
-      animate={{ opacity: 1, y: 0 }}
-      exit={hidden}
-      transition={{ duration: 0.15, ease: "easeOut" }}
-    >
-      <ul>
-        {caseStudies.map((study) => (
-          <li key={study.slug}>
-            <a
-              href={`#${study.slug}`}
-              onClick={onNavigate}
-              className="group/row relative block rounded-md px-3 py-2.5 transition-colors hover:bg-accent-soft focus-visible:bg-accent-soft"
-            >
-              <span>
-                <span className="block text-[15px] font-semibold leading-snug text-primary">
-                  {study.company}
-                </span>
-                <span className="block text-xs text-primary-soft">{study.role}</span>
-              </span>
-              <ArrowRight
-                size={14}
-                aria-hidden
-                className="absolute right-3 top-1/2 -mt-[7px] -translate-x-1 text-primary opacity-0 transition-[opacity,transform] duration-150 group-hover/row:translate-x-0 group-hover/row:opacity-100 group-focus-visible/row:translate-x-0 group-focus-visible/row:opacity-100"
-              />
-            </a>
-          </li>
-        ))}
-      </ul>
-    </motion.div>
-  );
-}
-
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [mobileWorkOpen, setMobileWorkOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // Only one desktop dropdown can be open at a time (its nav href, or null).
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  // Which mobile menu group is expanded.
+  const [mobileGroup, setMobileGroup] = useState<string | null>(null);
 
-  const workLinkRef = useRef<HTMLAnchorElement>(null);
-  const workItemRef = useRef<HTMLLIElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const openTimer = useRef<number | undefined>(undefined);
-  const closeTimer = useRef<number | undefined>(undefined);
-  // After clicking Work, don't reopen until the pointer leaves and comes back.
-  const suppressHover = useRef(false);
-  const focusFirstOnOpen = useRef(false);
-
-  const closeMenu = useCallback((returnFocus = false) => {
-    window.clearTimeout(openTimer.current);
-    window.clearTimeout(closeTimer.current);
-    setMenuOpen(false);
-    if (returnFocus) workLinkRef.current?.focus();
-  }, []);
+  // A close only applies if that menu is still the open one, so a late close
+  // timer from Work can't shut Projects after the pointer has moved across.
+  // Stable per-link handlers, so an open dropdown keeps its listeners across renders.
+  const menuHandlers = useMemo(
+    () =>
+      Object.fromEntries(
+        nav.map((link) => [
+          link.href,
+          (isOpen: boolean) =>
+            setOpenMenu((cur) => (isOpen ? link.href : cur === link.href ? null : cur)),
+        ]),
+      ),
+    [],
+  );
 
   const closeMobile = () => {
     setOpen(false);
-    setMobileWorkOpen(false);
+    setMobileGroup(null);
   };
 
   useEffect(() => {
@@ -167,80 +105,6 @@ export function Nav() {
     };
   }, [open]);
 
-  // While the Work menu is open: Esc, scroll, outside click and resizing to mobile close it.
-  useEffect(() => {
-    if (!menuOpen) return;
-    if (focusFirstOnOpen.current) {
-      focusFirstOnOpen.current = false;
-      menuRef.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeMenu(true);
-    };
-    const onScroll = () => closeMenu();
-    const onResize = () => window.innerWidth < 768 && closeMenu();
-    const onPointerDown = (e: PointerEvent) => {
-      if (!workItemRef.current?.contains(e.target as Node)) closeMenu();
-    };
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      document.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [menuOpen, closeMenu]);
-
-  useEffect(
-    () => () => {
-      window.clearTimeout(openTimer.current);
-      window.clearTimeout(closeTimer.current);
-    },
-    [],
-  );
-
-  // The Work <li> wraps both the link and the dropdown, so moving from one to
-  // the other only runs the close delay (the dropdown also bridges the gap).
-  const onWorkPointerEnter = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse" || suppressHover.current) return;
-    window.clearTimeout(closeTimer.current);
-    window.clearTimeout(openTimer.current);
-    openTimer.current = window.setTimeout(() => setMenuOpen(true), OPEN_DELAY);
-  };
-  const onWorkPointerLeave = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
-    suppressHover.current = false;
-    window.clearTimeout(openTimer.current);
-    closeTimer.current = window.setTimeout(() => setMenuOpen(false), CLOSE_DELAY);
-  };
-  const onWorkKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
-      e.preventDefault();
-      if (menuOpen) {
-        menuRef.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
-      } else {
-        focusFirstOnOpen.current = true;
-        setMenuOpen(true);
-      }
-    }
-  };
-  // Up/Down move between rows inside the dropdown.
-  const onMenuKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-    const links = [...(menuRef.current?.querySelectorAll<HTMLElement>("a") ?? [])];
-    const i = links.indexOf(document.activeElement as HTMLElement);
-    if (i === -1) return;
-    e.preventDefault();
-    links[(i + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length]?.focus();
-  };
-  const onWorkBlur = (e: React.FocusEvent<HTMLLIElement>) => {
-    // Tabbing out of the link + dropdown closes it.
-    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeMenu();
-  };
-
   const headerTone = open
     ? "border-b border-primary/10 bg-base"
     : scrolled
@@ -274,78 +138,40 @@ export function Nav() {
 
           <ul className="hidden h-full items-stretch gap-8 md:flex">
             {nav.map((link) => {
-              const isWork = link.href === WORK_HREF;
-              const isActive = active === link.href || (isWork && menuOpen);
-              const underline = (
-                <span
-                  aria-hidden
-                  className={`absolute inset-x-0 -bottom-0.5 h-0.5 origin-left rounded-full transition-transform duration-300 ${
-                    isActive
-                      ? "scale-x-100 bg-accent"
-                      : "scale-x-0 bg-primary/30 group-hover:scale-x-100"
-                  }`}
-                />
-              );
-
-              if (!isWork) {
+              const menu = navMenus[link.href];
+              if (menu) {
                 return (
-                  <li key={link.href} className="flex items-center">
-                    <a
-                      href={link.href}
-                      aria-current={active === link.href ? "location" : undefined}
-                      className="group relative py-2 text-sm text-primary"
-                    >
-                      {link.label}
-                      {underline}
-                    </a>
-                  </li>
+                  <NavDropdown
+                    key={link.href}
+                    id={link.href.slice(1)}
+                    label={link.label}
+                    href={link.href}
+                    menu={menu}
+                    open={openMenu === link.href}
+                    switching={openMenu !== null && openMenu !== link.href}
+                    onOpenChange={menuHandlers[link.href]}
+                    current={active === link.href}
+                  />
                 );
               }
-
+              const isActive = active === link.href;
               return (
-                <li
-                  key={link.href}
-                  ref={workItemRef}
-                  className="flex items-center"
-                  onPointerEnter={onWorkPointerEnter}
-                  onPointerLeave={onWorkPointerLeave}
-                  onBlur={onWorkBlur}
-                >
-                  <div className="relative">
-                    <a
-                      ref={workLinkRef}
-                      href={link.href}
-                      aria-current={active === link.href ? "location" : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={menuOpen}
-                      aria-controls={WORK_MENU_ID}
-                      onKeyDown={onWorkKeyDown}
-                      onClick={() => {
-                        suppressHover.current = true;
-                        closeMenu();
-                      }}
-                      className="group relative flex items-center gap-1 py-2 text-sm text-primary"
-                    >
-                      {link.label}
-                      <ChevronDown
-                        size={14}
-                        aria-hidden
-                        className={`transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
-                      />
-                      {underline}
-                    </a>
-                    <AnimatePresence>
-                      {menuOpen && (
-                        <WorkDropdown
-                          ref={menuRef}
-                          onKeyDown={onMenuKeyDown}
-                          // No hover suppression here: the row under the pointer is
-                          // removed, so no pointerleave would ever clear it.
-                          onNavigate={() => closeMenu()}
-                        />
-                      )}
-                    </AnimatePresence>
-                  </div>
+                <li key={link.href} className="flex items-center">
+                  <a
+                    href={link.href}
+                    aria-current={isActive ? "location" : undefined}
+                    className="group relative py-2 text-sm text-primary"
+                  >
+                    {link.label}
+                    <span
+                      aria-hidden
+                      className={`absolute inset-x-0 -bottom-0.5 h-0.5 origin-left rounded-full transition-transform duration-300 ${
+                        isActive
+                          ? "scale-x-100 bg-accent"
+                          : "scale-x-0 bg-primary/30 group-hover:scale-x-100"
+                      }`}
+                    />
+                  </a>
                 </li>
               );
             })}
@@ -386,14 +212,17 @@ export function Nav() {
                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent" />
               );
 
-              if (link.href === WORK_HREF) {
+              const menu = navMenus[link.href];
+              if (menu) {
+                const expanded = mobileGroup === link.href;
+                const listId = `mobile-${link.href.slice(1)}-list`;
                 return (
                   <li key={link.href} className="border-b border-primary/10">
                     <button
                       type="button"
-                      aria-expanded={mobileWorkOpen}
-                      aria-controls="mobile-work-list"
-                      onClick={() => setMobileWorkOpen((o) => !o)}
+                      aria-expanded={expanded}
+                      aria-controls={listId}
+                      onClick={() => setMobileGroup(expanded ? null : link.href)}
                       className="flex w-full items-center justify-between py-4 text-left font-serif text-2xl text-primary"
                     >
                       <span className="flex items-center gap-3">
@@ -403,31 +232,31 @@ export function Nav() {
                       <ChevronDown
                         size={20}
                         aria-hidden
-                        className={`transition-transform duration-200 ${mobileWorkOpen ? "rotate-180" : ""}`}
+                        className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
                       />
                     </button>
-                    <ul id="mobile-work-list" hidden={!mobileWorkOpen} className="pb-3">
-                      {caseStudies.map((study) => (
-                        <li key={study.slug}>
+                    <ul id={listId} hidden={!expanded} className="pb-3">
+                      {menu.items.map((row) => (
+                        <li key={row.href}>
                           <a
-                            href={`#${study.slug}`}
+                            href={row.href}
                             onClick={closeMobile}
                             className="block rounded-md px-3 py-2.5 hover:bg-accent-soft"
                           >
                             <span className="block text-[0.95rem] font-medium text-primary">
-                              {study.company}
+                              {row.title}
                             </span>
-                            <span className="block text-sm text-primary-soft">{study.role}</span>
+                            <span className="block text-sm text-primary-soft">{row.subtitle}</span>
                           </a>
                         </li>
                       ))}
                       <li>
                         <a
-                          href={WORK_HREF}
+                          href={link.href}
                           onClick={closeMobile}
                           className="block rounded-md px-3 py-2.5 text-sm text-primary underline decoration-primary/25 underline-offset-4 hover:bg-accent-soft"
                         >
-                          {navCopy.allWork}
+                          {menu.allLabel}
                         </a>
                       </li>
                     </ul>

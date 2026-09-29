@@ -232,8 +232,6 @@ export const footerCopy = {
 
 /** Nav UI copy. */
 export const navCopy = {
-  allWork: "All work",
-  workMenuLabel: "Case studies",
   resume: "Resume",
   resumeLabel: "Resume (opens PDF in a new tab)",
   skipLink: "Skip to content",
@@ -589,4 +587,45 @@ export const interests: Interest[] = [
 export const headshot = {
   src: "/images/headshot/headshot.jpg",
   alt: "Portrait of Aarav Aher",
+};
+
+/* ───────────────────────── Nav dropdowns ───────────────────────── */
+
+export type NavMenuItem = {
+  title: string;
+  subtitle: string;
+  href: `#${string}`;
+};
+
+export type NavMenu = {
+  /** Accessible name for the dropdown. */
+  label: string;
+  /** Mobile menu: last row linking to the whole section. */
+  allLabel: string;
+  items: NavMenuItem[];
+};
+
+/** Dropdowns keyed by the nav link they hang off. Rows reuse section data. */
+export const navMenus: Partial<Record<NavLink["href"], NavMenu>> = {
+  "#work": {
+    label: "Case studies",
+    allLabel: "All work",
+    items: caseStudies.map((study) => ({
+      title: study.company,
+      subtitle: study.role,
+      href: `#${study.slug}` as const,
+    })),
+  },
+  "#projects": {
+    label: "Projects, writing & coursework",
+    allLabel: "All projects",
+    items: [
+      ...projectsIndex.featured.map((entry) => ({
+        title: entry.name,
+        subtitle: entry.type,
+        href: `#${entry.slug}` as const,
+      })),
+      { title: "Coursework & Simulations", subtitle: "Northeastern & Glasgow", href: "#coursework" },
+    ],
+  },
 };
