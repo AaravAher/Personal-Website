@@ -1,26 +1,95 @@
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ *  COLOUR SYSTEM: 60 / 30 / 10
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Every colour on the site comes from the tokens below. Components use the
+ *  Tailwind names (bg-base, text-primary, bg-accent, text-cream, border-primary/15 …) and
+ *  never hard-coded hex values or Tailwind palette classes (gray-900 etc.).
+ *
+ *  60%  BASE     (--color-base, --color-base-deep)
+ *       Page background, most sections and cards. `base-deep` is a slightly
+ *       deeper shade of the same cream, used only to separate alternating
+ *       sections. Never use pure white.
+ *
+ *  30%  PRIMARY  (--color-primary, --color-primary-soft)
+ *       Navy. All headings and body text, the nav, borders and dividers
+ *       (primary at low opacity), the footer background, the education strip
+ *       and headline-metric numbers. `primary-soft` is for secondary text and
+ *       captions. Never use pure black.
+ *
+ *  10%  ACCENT   (--color-accent, --color-accent-strong, --color-accent-bright)
+ *       Burnt orange, used sparingly: primary buttons (Resume, Email me), link
+ *       hover and underline states, the active nav indicator, focus rings,
+ *       and at most ONE small highlight per section. If a section starts to
+ *       look orange, it is overused.
+ *         accent        #AE4A1A: text and button fills. Darkened from the
+ *                       brief's #D2642A, which only reached 3.5:1 with cream
+ *                       text. This gives 5.2:1 on base, 4.8:1 on base-deep.
+ *         accent-strong hover and pressed state for accent fills.
+ *         accent-bright the original #D2642A. NON-TEXT use only (underlines,
+ *                       focus rings) on navy, where it reaches 3.9:1.
+ *
+ *  No other hues. Photos supply the extra colour.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* 60% base */
+  --color-base: #faf7f0;
+  --color-base-deep: #f3eee3;
+  /* 30% primary */
+  --color-primary: #1b2a41;
+  --color-primary-soft: #4a5a73;
+  /* 10% accent */
+  --color-accent: #ae4a1a;
+  --color-accent-strong: #9a3f16;
+  --color-accent-bright: #d2642a;
+
+  /* Alias of base for TEXT on dark fills. Use text-cream, not text-base,
+     because text-base is Tailwind's font-size utility. */
+  --color-cream: var(--color-base);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --nav-height: 4.5rem;
+}
+
+html {
+  scroll-padding-top: var(--nav-height);
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-base);
+  color: var(--color-primary);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-base);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Focus rings sitting on the navy footer use the brighter accent for contrast. */
+.on-primary :focus-visible {
+  outline-color: var(--color-accent-bright);
 }
