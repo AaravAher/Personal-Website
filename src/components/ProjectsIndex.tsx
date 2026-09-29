@@ -5,7 +5,7 @@ import { ArrowUpRight, Check } from "lucide-react";
 import { latestArticle, projectsIndex, type IndexEntry } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
+import { MediaFrame } from "@/components/media/MediaSet";
 import { usePrefersReducedMotion } from "@/components/ui/usePrefersReducedMotion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -99,7 +99,14 @@ function FeaturedRow({ entry, index, variants }: { entry: IndexEntry; index: num
   
           <div className="col-span-2 mt-5 self-start md:col-span-1 md:col-start-3 md:row-span-2 md:row-start-1 md:mt-1 lg:col-start-4 lg:row-span-1">
             <div className="rounded-md shadow-primary/15 transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:rotate-2 group-hover:shadow-lg motion-reduce:group-hover:translate-y-0 motion-reduce:group-hover:rotate-0">
-              <PlaceholderImage image={entry.preview} sizes="(min-width: 768px) 200px, 100vw" />
+              {/* Website screenshots: whole page on a mat, or cropped from the top if it's tall. */}
+            <MediaFrame
+              media={entry.preview}
+              index={0}
+              ratio={16 / 10}
+              alignTop={entry.previewAlign === "top"}
+              sizes="(min-width: 768px) 200px, 100vw"
+            />
             </div>
             {linked ? (
               <span aria-hidden className="mt-3 inline-flex items-center gap-1 text-sm text-primary">

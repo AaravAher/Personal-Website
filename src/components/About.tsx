@@ -1,17 +1,9 @@
-import fs from "node:fs";
-import path from "node:path";
-import Image from "next/image";
 import { MapPin } from "lucide-react";
 import { aboutCopy, bio, education, headshot, personal } from "@/content/site";
+import { Picture } from "@/components/ui/Picture";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactLinks } from "@/components/ContactLinks";
-
-// Checked at build time (static export), so a missing photo shows a clean
-// placeholder instead of a broken image.
-const hasHeadshot = fs.existsSync(
-  path.join(process.cwd(), "public", headshot.src),
-);
 
 export function About() {
   return (
@@ -30,25 +22,13 @@ export function About() {
                 className="absolute inset-0 left-3 top-3 rounded-md border border-primary/20"
               />
               <figure className="relative aspect-[4/5] overflow-hidden rounded-md bg-base">
-                {hasHeadshot ? (
-                  <Image
-                    src={headshot.src}
-                    alt={headshot.alt}
-                    fill
-                    sizes="(min-width: 768px) 40vw, 100vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div
-                    role="img"
-                    aria-label={aboutCopy.headshotPlaceholder}
-                    className="flex h-full w-full items-center justify-center border border-primary/10"
-                  >
-                    <span className="font-serif text-8xl text-primary/20">
-                      {personal.monogram}
-                    </span>
-                  </div>
-                )}
+                <Picture
+                  src={headshot.src}
+                  alt={headshot.alt}
+                  sizes="(min-width: 768px) 40vw, 100vw"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  style={{ objectPosition: headshot.focus }}
+                />
               </figure>
             </div>
           </Reveal>

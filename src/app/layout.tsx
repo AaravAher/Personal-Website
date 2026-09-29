@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Inter, Instrument_Serif, Noto_Serif_Devanagari, Noto_Serif_Gujarati } from "next/font/google";
 import { MotionProvider } from "@/components/MotionProvider";
 import { personal } from "@/content/site";
 import "./globals.css";
@@ -18,6 +18,25 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 });
 
+// Indic scripts for the language interlude (Hindi and Marathi use Devanagari).
+// One light weight each, to sit with Instrument Serif; not preloaded, so they
+// only download when those phrases render.
+const notoDevanagari = Noto_Serif_Devanagari({
+  variable: "--font-devanagari",
+  subsets: ["devanagari"],
+  weight: "300",
+  display: "swap",
+  preload: false,
+});
+
+const notoGujarati = Noto_Serif_Gujarati({
+  variable: "--font-gujarati",
+  subsets: ["gujarati"],
+  weight: "300",
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: `${personal.name} | International Business, Northeastern`,
   description: personal.tagline,
@@ -32,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${instrumentSerif.variable} antialiased`}
+      className={`${inter.variable} ${instrumentSerif.variable} ${notoDevanagari.variable} ${notoGujarati.variable} antialiased`}
     >
       <body className="bg-base font-sans text-primary">
         <MotionProvider>{children}</MotionProvider>

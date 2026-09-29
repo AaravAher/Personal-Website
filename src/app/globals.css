@@ -198,3 +198,23 @@ body {
     color: var(--color-primary-soft);
   }
 }
+
+/* Serif for each script: Instrument Serif for Latin, Noto Serif for Indic.
+   Keyed off lang, so any text marked lang="hi" / "mr" / "gu" gets the right face. */
+.font-serif:lang(hi),
+.font-serif:lang(mr) {
+  font-family: var(--font-devanagari), var(--font-instrument-serif), serif;
+}
+.font-serif:lang(gu) {
+  font-family: var(--font-gujarati), var(--font-instrument-serif), serif;
+}
+
+/* Interests marquee: two identical halves slide left forever. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

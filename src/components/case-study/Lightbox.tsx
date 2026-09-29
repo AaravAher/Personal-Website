@@ -10,10 +10,13 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { mediaCopy, type SlotImage } from "@/content/site";
+import { mediaCopy, type Media } from "@/content/site";
+import { Picture } from "@/components/ui/Picture";
+
+/** What the viewer needs from an image. */
+export type LightboxImage = Pick<Media, "src" | "alt" | "caption">;
 
 type LightboxContextValue = {
   open: (index: number, trigger: HTMLElement) => void;
@@ -34,7 +37,7 @@ export function LightboxGroup({
   images,
   children,
 }: {
-  images: SlotImage[];
+  images: LightboxImage[];
   children: ReactNode;
 }) {
   const [index, setIndex] = useState<number | null>(null);
@@ -70,7 +73,7 @@ function Lightbox({
   onIndexChange,
   onClose,
 }: {
-  images: SlotImage[];
+  images: LightboxImage[];
   index: number | null;
   onIndexChange: (i: number) => void;
   onClose: () => void;
@@ -170,12 +173,12 @@ function Lightbox({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25 }}
             >
-              <Image
+              <Picture
                 src={image.src}
                 alt={image.alt}
-                fill
                 sizes="100vw"
-                className="object-contain"
+                eager
+                className="absolute inset-0 h-full w-full object-contain"
               />
             </motion.div>
             <figcaption className="mt-4 flex items-center gap-4 text-sm text-cream/80">

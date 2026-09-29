@@ -16,7 +16,7 @@ const SECTION_TO_NAV: Record<string, string> = {
   work: "#work",
   experience: "#work",
   projects: "#projects",
-  languages: "#about",
+  languages: "#off-the-clock",
   "off-the-clock": "#off-the-clock",
   interests: "#off-the-clock",
   contact: "#contact",

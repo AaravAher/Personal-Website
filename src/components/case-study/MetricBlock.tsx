@@ -27,10 +27,13 @@ function format(n: number, decimals: number) {
 export function MetricBlock({
   metric,
   headline = false,
+  compact = false,
   className = "",
 }: {
   metric: Metric;
   headline?: boolean;
+  /** Smaller stat, for the Off the Clock chapters. */
+  compact?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -77,7 +80,7 @@ export function MetricBlock({
       </dt>
       <dd
         className={`font-serif leading-none tracking-tight text-primary tabular-nums ${
-          headline ? "text-7xl sm:text-8xl" : "text-5xl sm:text-6xl"
+          compact ? "text-4xl sm:text-5xl" : headline ? "text-7xl sm:text-8xl" : "text-5xl sm:text-6xl"
         }`}
       >
         <span aria-hidden>{display}</span>
