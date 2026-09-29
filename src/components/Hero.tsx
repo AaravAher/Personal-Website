@@ -6,6 +6,7 @@ import { atAGlance, heroCopy, personal } from "@/content/site";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { LinkedInIcon } from "@/components/ui/LinkedInIcon";
+import { MakersMark } from "@/components/MakersMark";
 
 // Five groups × 0.05s stagger + 0.35s duration ≈ 0.6s total.
 const container: Variants = {
@@ -42,12 +43,19 @@ export function Hero() {
           {personal.overline}
         </motion.p>
 
-        <motion.h1
-          variants={item}
-          className="mt-5 font-serif text-[clamp(3.5rem,9vw,7.5rem)] leading-[0.95] tracking-[-0.02em] text-primary"
-        >
-          {first} <em className="italic">{rest.join(" ")}</em>
-        </motion.h1>
+        {/* Name block: shrink-wrapped so the seal anchors to the end of the name. */}
+        <div className="relative mt-5 self-start">
+          <motion.h1
+            variants={item}
+            className="font-serif text-[clamp(3.5rem,9vw,7.5rem)] leading-[0.95] tracking-[-0.02em] text-primary"
+          >
+            {first} <em className="italic">{rest.join(" ")}</em>
+          </motion.h1>
+          {/* Centred on the name so it clears the overline above and the tagline below. */}
+          <div className="absolute left-full top-1/2 ml-4 hidden -translate-y-1/2 sm:block lg:ml-6">
+            <MakersMark size="fluid" />
+          </div>
+        </div>
 
         <motion.p
           variants={item}
@@ -73,6 +81,9 @@ export function Hero() {
             {heroCopy.linkedinCta}
           </Button>
         </motion.div>
+
+        {/* Phones: no room beside the name, so the seal sits under the buttons. */}
+        <MakersMark size="sm" className="mt-8 sm:hidden" />
 
         <motion.a
           variants={item}

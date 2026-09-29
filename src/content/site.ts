@@ -217,6 +217,19 @@ export const heroCopy = {
   scrollCueLabel: "Scroll to About",
 };
 
+/** The "designed & built by me" seal next to the name in the hero. */
+export const makersMark = {
+  /** Runs around the circle; the trailing " · " closes the loop. */
+  ring: "DESIGNED · BUILT · WRITTEN BY AARAV AHER · MMXXVI · ",
+  tooltip: "This site: designed, built and written by me. Every section, every line.",
+};
+
+/** Footer copy. */
+export const footerCopy = {
+  colophon: "Designed and built by Aarav Aher. Set in Instrument Serif & Inter.",
+  rights: "All rights reserved.",
+};
+
 /** Nav UI copy. */
 export const navCopy = {
   allWork: "All work",
@@ -502,6 +515,10 @@ export const projectsIndex = {
         { name: "Business Statistics", theme: "Analytics" },
         { name: "Supply-Chain Management", theme: "Operations" },
         { name: "Decision Making in Developed and Emerging Markets", theme: "International business" },
+        { name: "Financial Management", theme: "Finance" },
+        { name: "Introduction to Marketing", theme: "Marketing" },
+        { name: "Communication", theme: "Communication" },
+        { name: "Innovation", theme: "Entrepreneurship" },
       ],
     },
     {

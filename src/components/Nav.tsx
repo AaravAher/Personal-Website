@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, FileText, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, FileText, Menu, X } from "lucide-react";
 import { caseStudies, nav, navCopy, personal } from "@/content/site";
 import { Button } from "@/components/ui/Button";
-import { WORK_MENU_ID, WorkMenu } from "@/components/WorkMenu";
+import { usePrefersReducedMotion } from "@/components/ui/usePrefersReducedMotion";
+
+const WORK_MENU_ID = "work-menu";
 
 /**
  * Sections on the page mapped to the nav link they light up.
@@ -28,14 +30,70 @@ const WORK_HREF = "#work";
 const OPEN_DELAY = 80;
 const CLOSE_DELAY = 180;
 
+/**
+ * Compact dropdown under the Work link: one row per case study.
+ * Its ::before bridges the 8px gap so the pointer never "leaves" on the way in.
+ */
+function WorkDropdown({
+  ref,
+  onNavigate,
+  onKeyDown,
+}: {
+  ref: React.Ref<HTMLDivElement>;
+  onNavigate: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+}) {
+  const reduce = usePrefersReducedMotion();
+  const hidden = { opacity: 0, y: reduce ? 0 : -4 };
+  return (
+    <motion.div
+      ref={ref}
+      id={WORK_MENU_ID}
+      role="region"
+      aria-label={navCopy.workMenuLabel}
+      onKeyDown={onKeyDown}
+      className="absolute left-0 top-full mt-2 w-[260px] rounded-lg border border-primary/15 bg-base p-1.5 shadow-lg shadow-primary/10 before:absolute before:inset-x-0 before:-top-2 before:h-2"
+      initial={hidden}
+      animate={{ opacity: 1, y: 0 }}
+      exit={hidden}
+      transition={{ duration: 0.15, ease: "easeOut" }}
+    >
+      <ul>
+        {caseStudies.map((study) => (
+          <li key={study.slug}>
+            <a
+              href={`#${study.slug}`}
+              onClick={onNavigate}
+              className="group/row relative block rounded-md px-3 py-2.5 transition-colors hover:bg-accent-soft focus-visible:bg-accent-soft"
+            >
+              <span>
+                <span className="block text-[15px] font-semibold leading-snug text-primary">
+                  {study.company}
+                </span>
+                <span className="block text-xs text-primary-soft">{study.role}</span>
+              </span>
+              <ArrowRight
+                size={14}
+                aria-hidden
+                className="absolute right-3 top-1/2 -mt-[7px] -translate-x-1 text-primary opacity-0 transition-[opacity,transform] duration-150 group-hover/row:translate-x-0 group-hover/row:opacity-100 group-focus-visible/row:translate-x-0 group-focus-visible/row:opacity-100"
+              />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </motion.div>
+  );
+}
+
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [mobileWorkOpen, setMobileWorkOpen] = useState(false);
-  const [megaOpen, setMegaOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const workLinkRef = useRef<HTMLAnchorElement>(null);
+  const workItemRef = useRef<HTMLLIElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const openTimer = useRef<number | undefined>(undefined);
   const closeTimer = useRef<number | undefined>(undefined);
@@ -43,10 +101,10 @@ export function Nav() {
   const suppressHover = useRef(false);
   const focusFirstOnOpen = useRef(false);
 
-  const closeMega = useCallback((returnFocus = false) => {
+  const closeMenu = useCallback((returnFocus = false) => {
     window.clearTimeout(openTimer.current);
     window.clearTimeout(closeTimer.current);
-    setMegaOpen(false);
+    setMenuOpen(false);
     if (returnFocus) workLinkRef.current?.focus();
   }, []);
 
@@ -109,27 +167,32 @@ export function Nav() {
     };
   }, [open]);
 
-  // While the Work menu is open: Esc, scroll and resizing to mobile close it.
+  // While the Work menu is open: Esc, scroll, outside click and resizing to mobile close it.
   useEffect(() => {
-    if (!megaOpen) return;
+    if (!menuOpen) return;
     if (focusFirstOnOpen.current) {
       focusFirstOnOpen.current = false;
       menuRef.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeMega(true);
+      if (e.key === "Escape") closeMenu(true);
     };
-    const onScroll = () => closeMega();
-    const onResize = () => window.innerWidth < 768 && closeMega();
+    const onScroll = () => closeMenu();
+    const onResize = () => window.innerWidth < 768 && closeMenu();
+    const onPointerDown = (e: PointerEvent) => {
+      if (!workItemRef.current?.contains(e.target as Node)) closeMenu();
+    };
     window.addEventListener("keydown", onKey);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
+    document.addEventListener("pointerdown", onPointerDown);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("pointerdown", onPointerDown);
     };
-  }, [megaOpen, closeMega]);
+  }, [menuOpen, closeMenu]);
 
   useEffect(
     () => () => {
@@ -139,60 +202,52 @@ export function Nav() {
     [],
   );
 
-  // The Work <li> wraps both the link and the panel, so moving from one to
-  // the other (even diagonally across the nav bar) only runs the close delay.
+  // The Work <li> wraps both the link and the dropdown, so moving from one to
+  // the other only runs the close delay (the dropdown also bridges the gap).
   const onWorkPointerEnter = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse" || suppressHover.current) return;
     window.clearTimeout(closeTimer.current);
     window.clearTimeout(openTimer.current);
-    openTimer.current = window.setTimeout(() => setMegaOpen(true), OPEN_DELAY);
+    openTimer.current = window.setTimeout(() => setMenuOpen(true), OPEN_DELAY);
   };
   const onWorkPointerLeave = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse") return;
     suppressHover.current = false;
     window.clearTimeout(openTimer.current);
-    closeTimer.current = window.setTimeout(() => setMegaOpen(false), CLOSE_DELAY);
+    closeTimer.current = window.setTimeout(() => setMenuOpen(false), CLOSE_DELAY);
   };
   const onWorkKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
       e.preventDefault();
-      if (megaOpen) {
+      if (menuOpen) {
         menuRef.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
       } else {
         focusFirstOnOpen.current = true;
-        setMegaOpen(true);
+        setMenuOpen(true);
       }
     }
   };
+  // Up/Down move between rows inside the dropdown.
+  const onMenuKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const links = [...(menuRef.current?.querySelectorAll<HTMLElement>("a") ?? [])];
+    const i = links.indexOf(document.activeElement as HTMLElement);
+    if (i === -1) return;
+    e.preventDefault();
+    links[(i + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length]?.focus();
+  };
   const onWorkBlur = (e: React.FocusEvent<HTMLLIElement>) => {
-    // Tabbing out of the link + panel closes it.
-    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeMega();
+    // Tabbing out of the link + dropdown closes it.
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeMenu();
   };
 
-  const headerTone =
-    open || megaOpen
-      ? `bg-base border-b ${megaOpen ? "border-transparent" : "border-primary/10"}`
-      : scrolled
-        ? "border-b border-primary/10 bg-base/85 backdrop-blur-md"
-        : "bg-transparent";
+  const headerTone = open
+    ? "border-b border-primary/10 bg-base"
+    : scrolled
+      ? "border-b border-primary/10 bg-base/85 backdrop-blur-md"
+      : "bg-transparent";
 
   return (
-    <>
-      {/* Dims the page under the Work menu. Sits below the header (z-40 vs z-50). */}
-      <AnimatePresence>
-        {megaOpen && (
-          <motion.div
-            aria-hidden
-            className="fixed inset-0 z-40 bg-primary/25"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => closeMega()}
-          />
-        )}
-      </AnimatePresence>
-
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-200 ${headerTone}`}
       >
@@ -220,7 +275,7 @@ export function Nav() {
           <ul className="hidden h-full items-stretch gap-8 md:flex">
             {nav.map((link) => {
               const isWork = link.href === WORK_HREF;
-              const isActive = active === link.href || (isWork && megaOpen);
+              const isActive = active === link.href || (isWork && menuOpen);
               const underline = (
                 <span
                   aria-hidden
@@ -250,44 +305,47 @@ export function Nav() {
               return (
                 <li
                   key={link.href}
+                  ref={workItemRef}
                   className="flex items-center"
                   onPointerEnter={onWorkPointerEnter}
                   onPointerLeave={onWorkPointerLeave}
                   onBlur={onWorkBlur}
                 >
-                  <a
-                    ref={workLinkRef}
-                    href={link.href}
-                    aria-current={active === link.href ? "location" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={megaOpen}
-                    aria-controls={WORK_MENU_ID}
-                    onKeyDown={onWorkKeyDown}
-                    onClick={() => {
-                      suppressHover.current = true;
-                      closeMega();
-                    }}
-                    className="group relative flex items-center gap-1 py-2 text-sm text-primary"
-                  >
-                    {link.label}
-                    <ChevronDown
-                      size={14}
-                      aria-hidden
-                      className={`transition-transform duration-200 ${megaOpen ? "rotate-180" : ""}`}
-                    />
-                    {underline}
-                  </a>
-                  <AnimatePresence>
-                    {megaOpen && (
-                      <WorkMenu
-                        ref={menuRef}
-                        onNavigate={() => {
-                          suppressHover.current = true;
-                          closeMega();
-                        }}
+                  <div className="relative">
+                    <a
+                      ref={workLinkRef}
+                      href={link.href}
+                      aria-current={active === link.href ? "location" : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={menuOpen}
+                      aria-controls={WORK_MENU_ID}
+                      onKeyDown={onWorkKeyDown}
+                      onClick={() => {
+                        suppressHover.current = true;
+                        closeMenu();
+                      }}
+                      className="group relative flex items-center gap-1 py-2 text-sm text-primary"
+                    >
+                      {link.label}
+                      <ChevronDown
+                        size={14}
+                        aria-hidden
+                        className={`transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
                       />
-                    )}
-                  </AnimatePresence>
+                      {underline}
+                    </a>
+                    <AnimatePresence>
+                      {menuOpen && (
+                        <WorkDropdown
+                          ref={menuRef}
+                          onKeyDown={onMenuKeyDown}
+                          // No hover suppression here: the row under the pointer is
+                          // removed, so no pointerleave would ever clear it.
+                          onNavigate={() => closeMenu()}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </li>
               );
             })}
@@ -394,6 +452,5 @@ export function Nav() {
           </ul>
         </div>
       </header>
-    </>
   );
 }

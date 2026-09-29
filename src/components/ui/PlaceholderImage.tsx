@@ -28,8 +28,6 @@ type PlaceholderImageProps = {
   sizes?: string;
   /** Show the caption over the image (on hover for mouse, always on touch). */
   overlayCaption?: boolean;
-  /** Icon-only placeholder, for small thumbnails. */
-  compact?: boolean;
   className?: string;
 };
 
@@ -44,7 +42,6 @@ export function PlaceholderImage({
   sizing = "aspect",
   sizes = "(min-width: 1024px) 50vw, 100vw",
   overlayCaption = false,
-  compact = false,
   className = "",
 }: PlaceholderImageProps) {
   const lightbox = useLightbox();
@@ -59,18 +56,14 @@ export function PlaceholderImage({
         aria-label={`${image.slot} (placeholder)`}
         className={`${frame} flex flex-col items-center justify-center gap-2 border border-primary/15 bg-base-deep p-3 text-center text-primary-soft`}
       >
-        <ImageIcon size={compact ? 16 : 20} aria-hidden strokeWidth={1.5} />
-        {!compact && (
-          <>
-            <span className="text-xs font-medium leading-snug">{image.slot}</span>
-            {image.caption && (
-              <span className="text-[0.7rem] leading-snug">{image.caption}</span>
-            )}
-            <span className="text-[0.65rem] leading-snug tabular-nums">
-              {mediaCopy.recommendedPrefix} {size}
-            </span>
-          </>
+        <ImageIcon size={20} aria-hidden strokeWidth={1.5} />
+        <span className="text-xs font-medium leading-snug">{image.slot}</span>
+        {image.caption && (
+          <span className="text-[0.7rem] leading-snug">{image.caption}</span>
         )}
+        <span className="text-[0.65rem] leading-snug tabular-nums">
+          {mediaCopy.recommendedPrefix} {size}
+        </span>
       </div>
     );
   }

@@ -66,19 +66,19 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
         </Reveal>
 
         <Reveal delay={0.05}>
-          <dl className="mt-10 flex flex-wrap border-y border-primary/15 py-8 sm:flex-nowrap sm:items-end">
+          <dl className="mt-10 flex flex-wrap border-y border-primary/15 py-8 md:flex-nowrap md:items-end">
             {headline && (
               <MetricBlock
                 metric={headline}
                 headline
-                className="basis-full border-b border-primary/15 pb-8 sm:basis-auto sm:border-b-0 sm:pb-0 sm:pr-12"
+                className="basis-full border-b border-primary/15 pb-8 md:basis-auto md:border-b-0 md:pb-0 md:pr-12"
               />
             )}
             {supporting.map((metric, i) => (
               <MetricBlock
                 key={metric.label}
                 metric={metric}
-                className={`flex-1 pt-8 sm:flex-none sm:border-l sm:border-primary/15 sm:px-10 sm:pt-0 ${
+                className={`flex-1 pt-8 md:flex-none md:border-l md:border-primary/15 md:px-10 md:pt-0 ${
                   i > 0 ? "border-l border-primary/15 pl-6" : "pr-6"
                 }`}
               />
