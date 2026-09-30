@@ -340,7 +340,7 @@ export const nav: NavLink[] = [
 ];
 
 export const bio =
-  "As a second-year International Business and Analytics student at Northeastern University with a passion for entrepreneurship, global markets, and social impact, I am committed to building experiences that create meaningful change. I thrive on taking initiative, excel at working across cultures and industries, and bring drive to everything I pursue. With a foundation in international business and a focus on continuous growth, I'm eager to leverage my skills to make a difference and build something worthwhile.";
+  "As a second-year International Business student at Northeastern University, with a concentration in Marketing Analytics and Supply Chain Management and a passion for entrepreneurship, global markets, and social impact, I am committed to building experiences that create meaningful change. I thrive on taking initiative, excel at working across cultures and industries, and bring drive to everything I pursue. With a foundation in international business and a focus on continuous growth, I'm eager to leverage my skills to make a difference and build something worthwhile.";
 
 export const education: EducationItem[] = [
   {
