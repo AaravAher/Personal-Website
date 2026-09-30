@@ -90,7 +90,6 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
 /* Focus rings sitting on the navy footer use the brighter accent for contrast. */
@@ -108,4 +107,114 @@ body {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Stretched link: the link's ::after covers its whole (position: relative)
+   row, so the row is clickable while only the name is the link's text.
+   The focus ring is drawn around the row, not the name. */
+.stretched-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.stretched-link:focus-visible {
+  outline: none;
+}
+.stretched-link:focus-visible::after {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Maker's mark: pressed onto the hero like a seal. */
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Soft "live" pulse: availability dot and the Boston map marker. */
+@keyframes pulse-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Split-flap: the top half of a character folds down onto the hinge. */
+@keyframes flap-top {
+  from {
+    transform: perspective(160px) rotateX(-90deg);
+  }
+  to {
+    transform: perspective(160px) rotateX(0deg);
+  }
+}
+
+/* While the hero is off-screen or the tab is hidden, freeze its CSS loops
+   (seal rotation, pulses). JS-driven motion checks the same state. */
+[data-hero-paused="true"] * {
+  animation-play-state: paused !important;
+}
+
+/* The plane has landed: one wider, stronger ring than the idle pulse. */
+@keyframes landed-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* "Now" in Boston's note flashes teal on landing, then settles back. */
+@keyframes now-flash {
+  from {
+    color: var(--color-accent);
+  }
+  to {
+    color: var(--color-primary-soft);
+  }
+}
+
+/* A city's label brightens as the plane arrives, then settles back. */
+@keyframes label-brighten {
+  0%,
+  35% {
+    color: var(--color-primary);
+  }
+  100% {
+    color: var(--color-primary-soft);
+  }
+}
+
+/* Serif for each script: Instrument Serif for Latin, Noto Serif for Indic.
+   Keyed off lang, so any text marked lang="hi" / "mr" / "gu" gets the right face. */
+.font-serif:lang(hi),
+.font-serif:lang(mr) {
+  font-family: var(--font-devanagari), var(--font-instrument-serif), serif;
+}
+.font-serif:lang(gu) {
+  font-family: var(--font-gujarati), var(--font-instrument-serif), serif;
+}
+
+/* Interests marquee: two identical halves slide left forever. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Play } from "lucide-react";
 import { mediaCopy, type VideoSource } from "@/content/site";
+import { Picture } from "@/components/ui/Picture";
 
 function embedUrl({ provider, id }: VideoSource) {
   return provider === "youtube"
@@ -18,24 +19,39 @@ function posterUrl(video: VideoSource) {
 }
 
 /**
- * 16:9 video. No id: "coming soon" placeholder. With an id: a click-to-load
- * facade, so the third-party iframe only loads when someone wants to watch.
+ * 16:9 video, in the same frame as the other media. No id: an intentional
+ * "coming soon" placeholder (a blurred product screen under navy). With an id:
+ * a click-to-load facade, so the third-party iframe only loads on demand.
  */
 export function VideoEmbed({ video }: { video: VideoSource }) {
   const [playing, setPlaying] = useState(false);
-  const frame = "relative aspect-video w-full overflow-hidden rounded-lg";
+  const frame = "relative aspect-video w-full overflow-hidden rounded-lg border border-primary/15";
 
   if (!video.id) {
     return (
       <div
         role="img"
-        aria-label={mediaCopy.videoComingSoon}
-        className={`${frame} flex flex-col items-center justify-center gap-4 border border-primary/15 bg-base-deep text-primary-soft`}
+        aria-label={`${video.title}, ${mediaCopy.videoComingSoon.toLowerCase()}`}
+        className={`${frame} bg-primary`}
       >
-        <span className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-primary/25">
-          <Play size={24} aria-hidden className="ml-1" />
+        {video.placeholderImage && (
+          <Picture
+            src={video.placeholderImage}
+            alt=""
+            sizes="960px"
+            className="absolute inset-0 h-full w-full scale-125 object-cover blur-[40px]"
+          />
+        )}
+        <span aria-hidden className="absolute inset-0 bg-primary/[0.72]" />
+        <span aria-hidden className="relative flex h-full flex-col items-center justify-center text-cream">
+          <span className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-cream/80 sm:h-20 sm:w-20">
+            <Play size={26} className="ml-1" />
+          </span>
+          <span className="mt-5 font-serif text-3xl sm:text-4xl">{mediaCopy.videoPlaceholderTitle}</span>
+          <span className="mt-2 text-[0.65rem] font-medium uppercase tracking-[0.25em] text-cream/70">
+            {mediaCopy.videoComingSoon}
+          </span>
         </span>
-        <span className="text-sm">{mediaCopy.videoComingSoon}</span>
       </div>
     );
   }

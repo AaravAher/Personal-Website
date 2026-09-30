@@ -1,66 +1,58 @@
 # Images
 
-Drop photos into the folder for each section, then fill in the matching `src`
-in `src/content/site.ts` (each empty `src` has its intended filename in a
-comment next to it). Until a `src` is filled, the site shows a labelled
-placeholder, so nothing breaks if a photo is missing.
+Everything in this folder is **generated**. Don't edit or add files here by hand.
 
-Use `.jpg` for photos and `.png` for screenshots. Keep each file under ~500 KB
-(export at ~80% quality). The site is a static export, so images are served
-as-is and are not resized automatically. Photos are cropped to fit their tile
-(centre crop), so keep the subject near the middle.
+## How it works
 
-Every image needs alt text in `site.ts` describing what's in the photo.
+1. Originals live in `/assets-src/<section>/` (outside `public/`, so full-size
+   files never ship). Use lowercase kebab-case names, e.g.
+   `assets-src/soccer/solo-in-game.jpg`.
+2. `npm run images:build` runs `scripts/optimize-images.mjs` (sharp), which for
+   every original:
+   - applies the EXIF rotation, so nothing is sideways
+   - strips all metadata, including GPS
+   - writes WebP at quality 80 in two sizes:
+     `public/images/<section>/<name>-1600w.webp` and `<name>-800w.webp`
+   - records the real dimensions in `src/content/image-manifest.json`
+3. `src/content/site.ts` refers to images by their base path, without the size
+   suffix: `src: "/images/soccer/solo-in-game"`. Components serve the right
+   size with `srcSet`.
 
-## Checklist
+## Folders
 
-### About
-- [ ] `headshot/headshot.jpg`: portrait, 1200 × 1500 px (4:5). This one
-      appears automatically, with no `site.ts` edit needed.
+| Section        | Used for                                                        |
+| -------------- | --------------------------------------------------------------- |
+| `about/`       | Headshot in About                                                |
+| `plannrai/`    | Four phone screenshots (case study)                              |
+| `skillmatics/` | Furbitz GTM strategy page, content deck (case study)             |
+| `celona/`      | Presenting photo, market research deck (case study)              |
+| `projects/`    | SiteSmith and BasisPoint previews (Index); SiteSmith founders page (spare) |
+| `soccer/`      | Football chapter: solo photo, medals, four match-result graphics (two in use) |
+| `photography/` | Photography chapter                                               |
+| `asha/`        | Asha Foundation chapter                                           |
 
-### PlannrAI (`plannrai/`), 4 portrait phone screenshots, ~1170 × 2532 px
-- [ ] `plannrai/screen-1.png`
-- [ ] `plannrai/screen-2.png`
-- [ ] `plannrai/screen-3.png`
-- [ ] `plannrai/screen-4.png`
+## Adding or swapping an image
 
-Take them on an iPhone (any recent model's native screenshot is close to this
-size). Order them in the story you want: e.g. onboarding → plan → detail → result.
+1. Put the original in `assets-src/<section>/new-name.jpg` (JPG, PNG or WebP;
+   not HEIC: export as JPG first).
+2. Run `npm run images:build`.
+3. In `site.ts`, point an entry at `"/images/<section>/new-name"` and set:
+   - `kind`: `"photo"` (cropped to fill), `"document"` (slides, docs and page
+     screenshots: never cropped, shown on a mat) or `"screenshot"` (phone screens)
+   - `alt`: describe what's in the image
+   - `caption`: optional for secondary images; the first image in a set always shows one
+   - `focus`: for photos, the point to keep in frame, e.g. `"60% 40%"`
+   - `trimTop`: for phone screenshots with a status bar, e.g. `0.055`
+4. The first image in a list is the primary. A set shows up to 4.
 
-### Skillmatics (`skillmatics/`), 5 photos for the photo-essay grid
-- [ ] `skillmatics/photo-1.jpg`: **landscape**, the big lead image,
-      ~2000 × 1250 px. *All You Can Mumbai stall.*
-- [ ] `skillmatics/photo-2.jpg`: **portrait**, the tall tile, ~1200 × 1800 px.
-      *In-store placement.*
-- [ ] `skillmatics/photo-3.jpg`: **landscape**, ~1600 × 1200 px (4:3).
-      *On the ground at the event.*
-- [ ] `skillmatics/photo-4.jpg`: **landscape**, ~1600 × 1200 px (4:3).
-      *Shelf and pricing setup.*
-- [ ] `skillmatics/photo-5.jpg`: **wide landscape**, the closing strip,
-      ~2000 × 900 px. *GTM presentation.*
-
-### Celona (`celona/`), 3 landscape photos, ~1600 × 1000 px (16:10)
-- [ ] `celona/photo-1.jpg`: the large lead image
-- [ ] `celona/photo-2.jpg`
-- [ ] `celona/photo-3.jpg`
-
-### Later sections
-- `gallery/`: personal photos for Off the Clock, 1600 px on the long edge
-- `football/`: match or team photos, 1600 × 1200 px (4:3)
+To trim empty page margins from a screenshot before it's built, add an entry to
+`EXTRACT` in `scripts/optimize-images.mjs`.
 
 ## PlannrAI video
 
-1. Upload the walkthrough to YouTube or Vimeo. **Unlisted** is fine.
-2. Copy the video id:
-   - YouTube `https://www.youtube.com/watch?v=AbC123xYz` → `AbC123xYz`
-   - Vimeo `https://vimeo.com/123456789` → `123456789`
-3. In `site.ts`, under PlannrAI `media.video`, set `id` to that value and
-   `provider` to `"youtube"` or `"vimeo"`.
-4. Optional: add `poster: "/images/plannrai/poster.jpg"` (1920 × 1080 px) for
-   a custom thumbnail. YouTube uses its own thumbnail otherwise; Vimeo shows a
-   plain navy frame without one.
-
-The video only loads when someone clicks play, so it doesn't slow the page.
+Upload to YouTube or Vimeo (unlisted is fine), then paste only the id into
+`caseStudies[0].media.video.id` in `site.ts` and set `provider`. The video
+block is hidden while the id is empty and appears automatically once it's set.
 
 ## Resume
 

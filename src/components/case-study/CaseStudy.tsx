@@ -1,36 +1,28 @@
-import { workSection, type CaseStudy as CaseStudyData } from "@/content/site";
+import { ArrowUpRight } from "lucide-react";
+import { mediaCopy, workSection, type CaseStudy as CaseStudyData } from "@/content/site";
 import { Reveal } from "@/components/ui/Reveal";
-import { LightboxGroup } from "./Lightbox";
 import { MetricBlock } from "./MetricBlock";
 import { VideoEmbed } from "./VideoEmbed";
-import {
-  MarketsGallery,
-  PhotoEssay,
-  ScreenshotStrip,
-  type IndexedImage,
-} from "./CaseStudyMedia";
+import { MarketChips, ScreenshotStrip } from "./CaseStudyMedia";
+import { MediaSet } from "@/components/media/MediaSet";
 
-function Media({ study, images }: { study: CaseStudyData; images: IndexedImage[] }) {
-  switch (study.slug) {
-    case "plannrai":
-      return <ScreenshotStrip company={study.company} images={images} />;
-    case "skillmatics":
-      return <PhotoEssay images={images} />;
-    case "celona":
-      return <MarketsGallery images={images} markets={study.markets} />;
-  }
+/** Phone screenshots get the strip; everything else uses the shared MediaSet. */
+function Media({ study }: { study: CaseStudyData }) {
+  const { images } = study.media;
+  if (!images.length) return null;
+  return images.every((m) => m.kind === "screenshot") ? (
+    <ScreenshotStrip company={study.company} images={images} />
+  ) : (
+    <>
+      <MediaSet images={images} />
+      <MarketChips markets={study.markets} />
+    </>
+  );
 }
 
 export function CaseStudy({ study, index }: { study: CaseStudyData; index: number }) {
   const number = String(index + 1).padStart(2, "0");
   const mediaLeft = index % 2 === 1;
-
-  // Only filled-in images go to the lightbox; placeholders get index -1.
-  const filled = study.media.images.filter((img) => img.src);
-  const images: IndexedImage[] = study.media.images.map((image) => ({
-    image,
-    lightboxIndex: filled.indexOf(image),
-  }));
 
   const [headline, ...supporting] = study.metrics;
 
@@ -40,7 +32,7 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
       aria-labelledby={`${study.slug}-title`}
       className="py-20 first:pt-6 last:pb-0 sm:py-28"
     >
-      <LightboxGroup images={filled}>
+      <>
         <Reveal>
           <header>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
@@ -62,23 +54,35 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
             <p className="mt-6 max-w-2xl text-xl leading-snug text-primary sm:text-2xl">
               {study.oneLiner}
             </p>
+            {study.url && study.linkLabel && (
+              <a
+                href={study.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-primary px-4 py-2 text-sm text-primary transition-colors hover:border-accent hover:text-accent-strong"
+              >
+                {study.linkLabel}
+                <ArrowUpRight size={15} aria-hidden />
+                <span className="sr-only">{mediaCopy.newTab}</span>
+              </a>
+            )}
           </header>
         </Reveal>
 
         <Reveal delay={0.05}>
-          <dl className="mt-10 flex flex-wrap border-y border-primary/15 py-8 sm:flex-nowrap sm:items-end">
+          <dl className="mt-10 flex flex-wrap border-y border-primary/15 py-8 md:flex-nowrap md:items-end">
             {headline && (
               <MetricBlock
                 metric={headline}
                 headline
-                className="basis-full border-b border-primary/15 pb-8 sm:basis-auto sm:border-b-0 sm:pb-0 sm:pr-12"
+                className="basis-full border-b border-primary/15 pb-8 md:basis-auto md:border-b-0 md:pb-0 md:pr-12"
               />
             )}
             {supporting.map((metric, i) => (
               <MetricBlock
                 key={metric.label}
                 metric={metric}
-                className={`flex-1 pt-8 sm:flex-none sm:border-l sm:border-primary/15 sm:px-10 sm:pt-0 ${
+                className={`flex-1 pt-8 md:flex-none md:border-l md:border-primary/15 md:px-10 md:pt-0 ${
                   i > 0 ? "border-l border-primary/15 pl-6" : "pr-6"
                 }`}
               />
@@ -86,8 +90,9 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
           </dl>
         </Reveal>
 
+        {/* Video (or its "coming soon" placeholder), full width above the columns, capped at 960px. */}
         {study.media.video && (
-          <Reveal delay={0.05} className="mt-12">
+          <Reveal delay={0.05} className="mt-12 max-w-[960px]">
             <VideoEmbed video={study.media.video} />
           </Reveal>
         )}
@@ -124,11 +129,12 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
             </ul>
           </Reveal>
 
-          <Reveal delay={0.1} className="lg:col-span-7">
-            <Media study={study} images={images} />
+          {/* If the text runs longer than the media, the media stays in view while reading. */}
+          <Reveal delay={0.1} className="lg:sticky lg:top-[calc(var(--nav-height)+24px)] lg:col-span-7 lg:self-start">
+            <Media study={study} />
           </Reveal>
         </div>
-      </LightboxGroup>
+      </>
     </article>
   );
 }

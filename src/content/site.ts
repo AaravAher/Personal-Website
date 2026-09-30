@@ -31,9 +31,31 @@ export type EducationItem = {
   notes?: string;
 };
 
-export type MediaItem =
-  | { type: "image"; src: string; alt: string; caption?: string }
-  | { type: "video"; videoUrl: string; title: string; caption?: string };
+/**
+ * A real image on the site. `src` is the base path written by
+ * `npm run images:build`, without the size suffix: "/images/celona/presenting"
+ * serves presenting-800w.webp and presenting-1600w.webp.
+ *
+ *   photo       cropped to fill its frame around `focus`
+ *   document    slides, docs and page screenshots: never cropped, shown on a mat
+ *   screenshot  phone screens, in a minimal phone frame
+ *   slide       a 16:9 slide shown on a projector screen (switch any slide
+ *               cover to it by changing its kind)
+ */
+export type MediaKind = "photo" | "document" | "screenshot" | "slide";
+
+export type Media = {
+  src: string;
+  alt: string;
+  caption?: string;
+  kind: MediaKind;
+  /** Photos: CSS object-position focal point, e.g. "60% 40%". */
+  focus?: string;
+  /** Screenshots: share of the height to trim from the top (phone status bar). */
+  trimTop?: number;
+  /** Slides: total slides in the deck, for the "01 / 24" counter. */
+  slides?: number;
+};
 
 export type Metric = {
   /** Keep prefixes/suffixes like "~" and "+" in the string; they survive the count-up. */
@@ -71,10 +93,15 @@ export type VideoSource = {
   title: string;
   /** Optional poster image. YouTube falls back to its own thumbnail. */
   poster?: string;
+  /** Built image (base path) blurred behind the "coming soon" placeholder. */
+  placeholderImage?: string;
 };
 
 export type CaseStudy = {
   slug: "plannrai" | "skillmatics" | "celona";
+  /** Optional product link, shown under the one-liner. */
+  url?: string;
+  linkLabel?: string;
   company: string;
   role: string;
   location: string;
@@ -88,8 +115,10 @@ export type CaseStudy = {
   metrics: Metric[];
   skills: string[];
   media: {
+    /** Hidden until it has an id. */
     video?: VideoSource;
-    images: SlotImage[];
+    /** First image is the primary. PlannrAI's are phone screenshots. */
+    images: Media[];
   };
   /** Celona only: chips below the photos and the world-map visual later. */
   markets?: Market[];
@@ -99,23 +128,55 @@ export type ExperienceCard = {
   slug: string;
   company: string;
   role: string;
-  location?: string;
+  location: string;
   dates: string;
+  /** Resume text, shown on the back of the flip card. */
   summary: string;
+  /** Big number on the back of the flip card. */
+  highlight: Metric;
 };
 
-export type LinkedItem = {
-  label: string;
+export type Article = {
   title: string;
-  description?: string;
-  /** Leave empty until the link is live. */
+  /** Shown next to the title, e.g. "June 2026". */
+  date: string;
+  /** YYYY-MM, used to pick the most recent article. */
+  published: string;
   url: string;
 };
 
-export type AwardsAndProjects = {
-  coursework: string[];
-  simulations: string[];
-  projects: LinkedItem[];
+export type IndexEntry = {
+  slug: string;
+  name: string;
+  /** Small letter-spaced label under the name. */
+  type: string;
+  /** Italic serif line above the description. Writing entries show their latest article instead. */
+  lead?: string;
+  description: string;
+  /** Where the row links. Leave empty for "Link coming soon" (writing entries fall back to the latest article). */
+  url: string;
+  linkLabel: string;
+  preview: Media;
+  /** Crop a tall preview from the top of the page rather than the middle. */
+  previewAlign?: "top";
+  articles?: Article[];
+};
+
+export type Course = {
+  name: string;
+  /** Short label for what the course is relevant to. */
+  theme: string;
+};
+
+export type CourseGroup = {
+  institution: string;
+  courses: Course[];
+};
+
+export type Simulation = {
+  name: string;
+  theme: string;
+  completed: boolean;
 };
 
 export type Language = {
@@ -123,28 +184,28 @@ export type Language = {
   nativeName: string;
   /** "More about me" in the language's own script. */
   moreAboutMe: string;
-  /** BCP-47 tag so screen readers pronounce it correctly. */
+  /** BCP-47 tag so screen readers pronounce it correctly (and the right font loads). */
   lang: string;
 };
 
-export type GalleryImage = {
-  src: string;
-  alt: string;
-  caption: string;
+export type Chapter = {
+  slug: string;
+  overline: string;
+  title: string;
+  meta: string;
+  text: string;
+  stat?: Metric;
+  /** First image is the primary. */
+  media: Media[];
+  /** "gallery": the photos are the content: bigger primary, native aspect ratios. */
+  layout?: "gallery";
 };
 
-export type OffTheClockItem = {
-  slug: string;
-  title: string;
-  role?: string;
-  dates?: string;
-  summary: string;
-  media: MediaItem[];
-};
+export type InterestIcon = "flag" | "table-tennis" | "watch" | "camera" | "trending-up" | "gamepad";
 
 export type Interest = {
   label: string;
-  optional?: boolean;
+  icon: InterestIcon;
 };
 
 export type NavLink = {
@@ -169,12 +230,59 @@ export const personal: Personal = {
   resume: "/resume/Aarav_Aher_Resume.pdf",
 };
 
+export type HeroStat = {
+  label: string;
+  value: string;
+  /** "clock": appends live Boston time. "availability": teal dot + mailto link. */
+  kind?: "clock" | "availability";
+};
+
 /** Stats strip along the bottom of the hero. Keep to four. */
-export const atAGlance: { label: string; value: string }[] = [
+export const atAGlance: HeroStat[] = [
   { label: "Studying", value: "International Business, Northeastern" },
   { label: "Focus", value: "Supply Chain & Marketing" },
-  { label: "Record", value: "301 units in one day, Skillmatics" },
-  { label: "Building", value: "PlannrAI, 50+ beta users" },
+  { label: "Based in", value: "Boston, MA", kind: "clock" },
+  { label: "Looking for", value: "Spring 2027 Co-op", kind: "availability" },
+];
+
+/** Live clock shown after "Based in". */
+export const heroClock = {
+  timeZone: "America/New_York",
+  zoneLabel: "ET",
+  /** Shown in the static HTML until the browser renders the real time. */
+  placeholder: "--:--",
+  separator: " · ",
+};
+
+export type RouteStop = {
+  city: string;
+  lat: number;
+  lng: number;
+  label: string;
+  note: string;
+  /** The current city: teal dot with a pulse; the route ends here. */
+  current?: boolean;
+  /** Part of the note that flashes teal when the plane lands, e.g. "Now". */
+  noteHighlight?: string;
+  /**
+   * Northward bow of the leg that arrives at this stop, as a share of the
+   * leg's length (default 0.22). Tune arc curvature here, not in the component.
+   */
+  bow?: number;
+};
+
+/**
+ * Hero route map, flown in this order; it ends where I am now (Boston).
+ * Each leg is drawn from the previous stop to this one.
+ */
+export const route: RouteStop[] = [
+  { city: "Mumbai", lat: 19.08, lng: 72.88, label: "Mumbai", note: "Home" },
+  // Longest leg: a gentle bow kept inside the map, passing below Glasgow and above Boston.
+  { city: "Bay Area", lat: 37.77, lng: -122.42, label: "Bay Area", note: "Celona", bow: 0.3 },
+  // East over Canada and Greenland, well above Boston and its label.
+  { city: "Glasgow", lat: 55.86, lng: -4.25, label: "Glasgow", note: "Study abroad", bow: 0.36 },
+  // Westbound across the Atlantic.
+  { city: "Boston", lat: 42.36, lng: -71.06, label: "Boston", note: "Northeastern · Now", noteHighlight: "Now", current: true, bow: 0.22 },
 ];
 
 /** Hero UI copy. */
@@ -183,8 +291,23 @@ export const heroCopy = {
   linkedinCta: "LinkedIn",
   newTab: "(opens in a new tab)",
   statsLabel: "At a glance",
+  availabilityLabel: "Email me about",
+  mapLabel: "Route map: Mumbai to the Bay Area to Glasgow to Boston",
   scrollCue: "Scroll",
   scrollCueLabel: "Scroll to About",
+};
+
+/** The "designed & built by me" seal next to the name in the hero. */
+export const makersMark = {
+  /** Runs around the circle; the trailing " · " closes the loop. */
+  ring: "DESIGNED · BUILT · WRITTEN BY AARAV AHER · MMXXVI · ",
+  tooltip: "This site: designed, built and written by me. Every section, every line.",
+};
+
+/** Footer copy. */
+export const footerCopy = {
+  colophon: "Designed and built by Aarav Aher. Set in Instrument Serif & Inter.",
+  rights: "All rights reserved.",
 };
 
 /** Nav UI copy. */
@@ -201,7 +324,6 @@ export const aboutCopy = {
   eyebrow: "About",
   educationHeading: "Education",
   contactHeading: "Contact",
-  headshotPlaceholder: "Headshot placeholder",
   linkedinLabel: "LinkedIn",
   resumeLabel: "Resume",
 };
@@ -218,7 +340,7 @@ export const nav: NavLink[] = [
 ];
 
 export const bio =
-  "As a second-year International Business and Analytics student at Northeastern University with a passion for entrepreneurship, global markets, and social impact, I am committed to building experiences that create meaningful change. I thrive on taking initiative, excel at working across cultures and industries, and bring drive to everything I pursue. With a foundation in international business and a focus on continuous growth, I'm eager to leverage my skills to make a difference and build something worthwhile.";
+  "As a second-year International Business student at Northeastern University, with a concentration in Marketing Analytics and Supply Chain Management and a passion for entrepreneurship, global markets, and social impact, I am committed to building experiences that create meaningful change. I thrive on taking initiative, excel at working across cultures and industries, and bring drive to everything I pursue. With a foundation in international business and a focus on continuous growth, I'm eager to leverage my skills to make a difference and build something worthwhile.";
 
 export const education: EducationItem[] = [
   {
@@ -259,8 +381,10 @@ export const workSection = {
 
 /** Shared UI strings for media components. */
 export const mediaCopy = {
-  videoComingSoon: "Product walkthrough — coming soon",
+  videoPlaceholderTitle: "Intro video",
+  videoComingSoon: "Coming soon",
   playVideo: "Play video",
+  newTab: "(opens in a new tab)",
   openImage: "View larger",
   lightboxLabel: "Image viewer",
   closeLightbox: "Close image viewer",
@@ -280,6 +404,8 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "plannrai",
     company: "PlannrAI",
+    url: "https://plannrai.in",
+    linkLabel: "Visit plannrai.in",
     role: "Co-Founder & Developer",
     location: "Boston, MA",
     dates: "Jan 2026 – Present",
@@ -300,13 +426,13 @@ export const caseStudies: CaseStudy[] = [
     skills: ["Product", "GTM", "User Acquisition", "Brand Positioning"],
     media: {
       // Paste the YouTube or Vimeo id (not the full URL) once the video is up.
-      video: { provider: "youtube", id: "", title: "PlannrAI product walkthrough" },
+      video: { provider: "youtube", id: "", title: "PlannrAI intro video", placeholderImage: "/images/plannrai/home" },
+      // No status bars in these screenshots (they start at the app header), so no trim.
       images: [
-        // TODO: describe each screen in its alt text once added.
-        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 1" }, // /images/plannrai/screen-1.png
-        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 2" }, // /images/plannrai/screen-2.png
-        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 3" }, // /images/plannrai/screen-3.png
-        { src: "", alt: "PlannrAI app screen", aspect: "portrait", slot: "PlannrAI screenshot 4" }, // /images/plannrai/screen-4.png
+        { kind: "screenshot", src: "/images/plannrai/home", caption: "Home: plan my day", alt: "PlannrAI home screen with a Plan My Day button, the next scheduled block, a mood check-in (low, optimal, high) and a Mindspace note field" },
+        { kind: "screenshot", src: "/images/plannrai/calendar", caption: "Day planner", alt: "PlannrAI day view for Tuesday 29 September with time blocks for dinner, PlannrAI work and studying" },
+        { kind: "screenshot", src: "/images/plannrai/goals", caption: "Goals and AI strategies", alt: "PlannrAI goals screen tracking weekly minutes for gym, sports, SiteSmith and PlannrAI, each with a Strategy button" },
+        { kind: "screenshot", src: "/images/plannrai/ai-coach", caption: "Donna, the AI chief of staff", alt: "Chat with Donna, PlannrAI's AI chief of staff, moving tasks to later in the week after a request to reduce today's load" },
       ],
     },
   },
@@ -335,13 +461,9 @@ export const caseStudies: CaseStudy[] = [
     ],
     skills: ["Retail Distribution", "Pricing", "Market Research", "GTM", "Event Sales"],
     media: {
-      // TODO: Aarav to confirm captions and alt text once photos are chosen.
       images: [
-        { src: "", alt: "The Gouda Games stall at All You Can Mumbai", caption: "All You Can Mumbai stall", aspect: "landscape", slot: "Skillmatics photo 1", recommendedSize: "2000 × 1250 px" }, // /images/skillmatics/photo-1.jpg
-        { src: "", alt: "Gouda Games products placed in a Mumbai store", caption: "In-store placement", aspect: "portrait", slot: "Skillmatics photo 2", recommendedSize: "1200 × 1800 px" }, // /images/skillmatics/photo-2.jpg
-        { src: "", alt: "Selling Gouda Games to visitors at the event", caption: "On the ground at the event", aspect: "landscape", slot: "Skillmatics photo 3", recommendedSize: "1600 × 1200 px" }, // /images/skillmatics/photo-3.jpg
-        { src: "", alt: "Gouda Games shelf display with pricing", caption: "Shelf and pricing setup", aspect: "landscape", slot: "Skillmatics photo 4", recommendedSize: "1600 × 1200 px" }, // /images/skillmatics/photo-4.jpg
-        { src: "", alt: "Presenting go-to-market plans to the Skillmatics leadership", caption: "GTM presentation", aspect: "landscape", slot: "Skillmatics photo 5", recommendedSize: "2000 × 900 px" }, // /images/skillmatics/photo-5.jpg
+        { kind: "document", src: "/images/skillmatics/furbitz-gtm-strategy", caption: "Furbitz India go-to-market strategy", alt: "Cover of the Gouda Games Furbitz India go-to-market strategy for 2026: a collectible dog-shaped keychain, launch price ₹499, four breed variants, launching June 2026" },
+        { kind: "document", src: "/images/skillmatics/content-deck", caption: "Content deck: reels, carousels and statics", alt: "Title slide of the Artsy Stash content deck, covering reels, carousels and static posts" },
       ],
     },
   },
@@ -372,11 +494,10 @@ export const caseStudies: CaseStudy[] = [
       "Executive Presentation",
     ],
     media: {
-      // TODO: Aarav to confirm captions and alt text once photos are chosen.
       images: [
-        { src: "", alt: "Presenting the foreign-market analysis", caption: "Presenting the market analysis", aspect: "landscape", slot: "Celona photo 1" }, // /images/celona/photo-1.jpg
-        { src: "", alt: "With the Celona international business team", caption: "International business team", aspect: "landscape", slot: "Celona photo 2" }, // /images/celona/photo-2.jpg
-        { src: "", alt: "Celona office in the Bay Area", caption: "Celona, Bay Area", aspect: "landscape", slot: "Celona photo 3" }, // /images/celona/photo-3.jpg
+        { kind: "photo", src: "/images/celona/presenting", focus: "60% 40%", caption: "Presenting the foreign-market analysis", alt: "Aarav presenting market research to Celona's team around a conference table, with the analysis on the wall screen behind him" },
+        // TODO: Aarav to set the real slide count.
+        { kind: "slide", slides: 24, src: "/images/celona/market-research-deck", caption: "Six-market analysis deck", alt: "Title slide reading International Expansion of Celona: Market Research" },
       ],
     },
     markets: [
@@ -396,87 +517,227 @@ export const otherExperience: ExperienceCard[] = [
     company: "Scorpio India",
     role: "Intern (Part-Time)",
     location: "Mumbai, India",
-    dates: "Jul 2024",
+    dates: "July 2024",
     summary:
-      "Managed payment negotiations with 3 major vessel clients, issued 2 legal notices, and sped up claim resolution by 7+ days while keeping client relationships intact.",
+      "Managed payment negotiations with 3 major vessel clients, issuing 2 legal notices and accelerating claim resolution by 7+ days while preserving long-term client relationships and future shipping orders.",
+    highlight: { value: "7+ days", label: "faster claim resolution" },
   },
   {
     slug: "scholastic",
     company: "Scholastic India",
     role: "HR Intern (Part-Time, School Partnership)",
+    location: "India",
     dates: "2023 – 2024",
     summary:
-      "Coordinated a book launch event with 1,000+ guests, covering logistics, vendors and on-the-day execution.",
+      "Partnered with HR leadership to coordinate a major book launch event attended by over 1,000 guests, managing logistics, vendor coordination, and on-the-day execution.",
+    highlight: { value: "1,000+", label: "guests" },
   },
 ];
 
-export const awardsAndProjects: AwardsAndProjects = {
+/** Copy for the Other Experience flip cards. */
+export const experienceSection = {
+  eyebrow: "Also",
+  title: "Other experience",
+  flipHint: "Flip for details",
+};
+
+/** "The Index": featured projects, coursework and simulations. */
+export const projectsIndex = {
+  eyebrow: "Index",
+  title: "Projects, writing & coursework",
+  linkComingSoon: "Link coming soon",
+  newTab: "(opens in a new tab)",
+
+  featured: [
+    {
+      slug: "sitesmith",
+      name: "SiteSmith",
+      type: "Studio · Co-founder",
+      lead: "Websites that move at the speed of your idea.",
+      description:
+        "A Mumbai-based, AI-powered web design studio I co-founded with two friends. We build custom websites for personal brands and small businesses, fast and with no middlemen: clients work directly with the three of us from direction and design through to delivery.",
+      url: "https://www.sitesmith.co.in/",
+      linkLabel: "Visit site",
+      preview: { kind: "document", src: "/images/projects/sitesmith-hero", alt: "SiteSmith homepage: 'Websites that move at the speed of your idea' over a mechanical keyboard" },
+    },
+    {
+      slug: "basispoint",
+      name: "BasisPoint Insight",
+      type: "Writing · Published author",
+      description:
+        "Published author at BasisPoint Insight. My piece on Portugal's 1–1 World Cup draw with DR Congo argues the result came down to a midfield that failed to create chances, not to Cristiano Ronaldo.",
+      // Optional author/profile page. Empty: the row links to the latest article.
+      url: "",
+      linkLabel: "Read article",
+      preview: { kind: "document", src: "/images/projects/basispoint-article", alt: "Aarav's BasisPoint Insight article on Portugal's 1–1 draw, with a photo of Cristiano Ronaldo and his byline" },
+      previewAlign: "top",
+      articles: [
+        {
+          title: "Portugal Were Held by a Failure of Service, Not Their Captain",
+          date: "June 2026",
+          published: "2026-06",
+          url: "https://basispointinsight.com/Story/Search/portugal-were-held-by-a-failure-of-service--not-their-captain_27e4841d184e.html",
+        },
+      ],
+    },
+  ] satisfies IndexEntry[] as IndexEntry[],
+
+  courseworkHeading: "Coursework",
   coursework: [
-    "Business Statistics",
-    "Supply-Chain Management",
-    "Decision Making in Developed and Emerging Markets",
-  ],
+    {
+      institution: "Northeastern University",
+      courses: [
+        { name: "Business Statistics", theme: "Analytics" },
+        { name: "Supply-Chain Management", theme: "Operations" },
+        { name: "Decision Making in Developed and Emerging Markets", theme: "International business" },
+        { name: "Financial Management", theme: "Finance" },
+        { name: "Introduction to Marketing", theme: "Marketing" },
+        { name: "Communication", theme: "Communication" },
+        { name: "Innovation", theme: "Entrepreneurship" },
+      ],
+    },
+    {
+      institution: "University of Glasgow · Study abroad",
+      courses: [
+        { name: "Principles of Microeconomics", theme: "Economics" },
+        { name: "Rhetorical Devices in English", theme: "Communication" },
+      ],
+    },
+  ] satisfies CourseGroup[] as CourseGroup[],
+
+  simulationsHeading: "Simulations",
+  completedLabel: "Completed",
   simulations: [
-    "Market-Entry Simulation",
-    "Supply-Chain Management Simulation",
-  ],
-  projects: [
-    {
-      label: "AI-powered Web Design Studio",
-      title: "SiteSmith",
-      url: "",
-    },
-    {
-      label: "Writing · Published Author",
-      title: "BasisPoint Insight",
-      url: "",
-    },
-  ],
+    { name: "Market-Entry Simulation", theme: "Strategy", completed: true },
+    { name: "Supply-Chain Management Simulation", theme: "Operations", completed: true },
+  ] satisfies Simulation[] as Simulation[],
+  simulationsNote: "Run through D'Amore-McKim School of Business, Northeastern.",
+};
+
+/** The most recent article by `published` (YYYY-MM). */
+export function latestArticle(articles: Article[] = []): Article | undefined {
+  return [...articles].sort((a, b) => b.published.localeCompare(a.published))[0];
+}
+
+/** "More about me", cycling through the languages I speak. */
+export const languagesSection = {
+  label: "More about me, in the languages I speak",
 };
 
 export const languages: Language[] = [
   { name: "English", nativeName: "English", moreAboutMe: "More about me", lang: "en" },
-  { name: "Hindi", nativeName: "हिंदी", moreAboutMe: "मेरे बारे में और", lang: "hi" },
+  { name: "Spanish", nativeName: "Español", moreAboutMe: "Más sobre mí", lang: "es" },
+  { name: "Hindi", nativeName: "हिंदी", moreAboutMe: "मेरे बारे में कुछ और", lang: "hi" },
   { name: "Marathi", nativeName: "मराठी", moreAboutMe: "माझ्याबद्दल अधिक", lang: "mr" },
   { name: "Gujarati", nativeName: "ગુજરાતી", moreAboutMe: "મારા વિશે વધુ", lang: "gu" },
-  { name: "Spanish", nativeName: "Español", moreAboutMe: "Más sobre mí", lang: "es" },
 ];
 
-export const gallery: GalleryImage[] = [
-  // Add photos to /public/images/gallery/, e.g.:
-  // { src: "/images/gallery/01.jpg", alt: "Describe the photo", caption: "Short caption" },
-];
+export const offTheClockSection = {
+  eyebrow: "Off the clock",
+  title: "Life outside work",
+};
 
-export const offTheClock: OffTheClockItem[] = [
+export const chapters: Chapter[] = [
   {
     slug: "football",
-    title: "Football",
-    dates: "2023 – 2025",
-    summary:
-      "Played in a national-level tournament in India and led my club team to a third-place finish in the state league.",
-    media: [],
+    overline: "Football",
+    title: "The pitch",
+    meta: "2023 – 2025 · India",
+    text: "Competed in a national-level tournament in India, representing my club at the highest competitive tiers in the country. Led the club team to a third-place finish in the state league, coordinating tactics and player development.",
+    stat: { value: "3rd", label: "State league finish" },
+    media: [
+      { kind: "photo", src: "/images/soccer/solo-in-game", focus: "47% 45%", caption: "In action for Maharashtra Oranje FC", alt: "Aarav in a blue and orange kit, number 31, bringing the ball forward on an artificial pitch" },
+      { kind: "photo", src: "/images/soccer/medals", focus: "50% 50%", caption: "Medals from football and school competitions", alt: "Rows of medals laid out on a sofa, including Man of the Match and U14 winner medals and a Star of the Match trophy" },
+      { kind: "document", src: "/images/soccer/result-7-0-sri-ma", caption: "7–0 vs Thane – Sri Ma FC, U17 Youth League", alt: "Full-time graphic: Maharashtra Oranje FC 7–0 Thane – Sri Ma FC, Under 17 Youth League, Cooperage Stadium, 4 December 2023, with a team photo" },
+      { kind: "document", src: "/images/soccer/result-3-1-thane-city-state-league", caption: "3–1 vs Thane City FC, U17 State League", alt: "Full-time graphic: Maharashtra Oranje FC 3–1 Thane City FC, Under 17 State League, Cooperage Stadium, 14 August 2024, with the team by the scoreboard" },
+      // Also available: /images/soccer/result-4-1-conscient-sports, /images/soccer/result-6-1-mumbai-soccer-prodigies
+    ],
+  },
+  {
+    slug: "photography",
+    overline: "Photography",
+    title: "Through the lens",
+    meta: "Ongoing",
+    // TODO: Aarav to personalise
+    text: "Photography is how I slow down and notice things. A few of my favourite frames.",
+    layout: "gallery",
+    media: [
+      { kind: "photo", src: "/images/photography/milky-way-joshua-trees", caption: "Milky Way over Joshua trees", alt: "The Milky Way and a shooting star over a desert of Joshua tree silhouettes, with a warm glow on the horizon" },
+      { kind: "photo", src: "/images/photography/taj-mahal", caption: "Taj Mahal, Agra", alt: "The Taj Mahal framed through a dark arched gateway in warm, hazy light" },
+      { kind: "photo", src: "/images/photography/moon-through-palms", alt: "A bright moon in a hazy night sky, seen through dark palm fronds" },
+    ],
   },
   {
     slug: "asha",
+    overline: "Service",
     title: "Asha Foundation",
-    role: "Volunteer Educator",
-    dates: "2022 – 2024",
-    summary:
-      "Taught 50+ underprivileged children and co-developed lesson plans with NGO leadership.",
-    media: [],
+    meta: "2022 – 2024 · Volunteer Educator",
+    text: "Taught 50+ underprivileged children over two years, delivering structured lessons to build foundational academic skills and improve access to education. Worked with NGO leadership to develop lesson plans tailored to students at different ability levels.",
+    stat: { value: "50+", label: "Children taught" },
+    media: [
+      { kind: "photo", src: "/images/asha/teaching-session", focus: "45% 40%", caption: "Teaching session, Asha Foundation", alt: "Volunteers leading a reading activity with children in a brightly painted classroom, students seated on the floor" },
+      { kind: "photo", src: "/images/asha/group-photo", focus: "50% 45%", caption: "Volunteers and students, Asha Foundation", alt: "Group photo of volunteers in maroon shirts with children in blue T-shirts in a colourful classroom library" },
+    ],
   },
 ];
 
 export const interests: Interest[] = [
-  { label: "Formula 1" },
-  { label: "Table Tennis" },
-  { label: "Watches" },
-  { label: "Photography", optional: true },
-  { label: "Investing", optional: true },
-  { label: "Gaming", optional: true },
+  { label: "Formula 1", icon: "flag" },
+  { label: "Table Tennis", icon: "table-tennis" },
+  { label: "Watches", icon: "watch" },
+  { label: "Photography", icon: "camera" },
+  { label: "Investing", icon: "trending-up" },
+  { label: "Gaming", icon: "gamepad" },
 ];
 
-export const headshot = {
-  src: "/images/headshot/headshot.jpg",
-  alt: "Portrait of Aarav Aher",
+export const interestsSection = {
+  label: "Interests",
+};
+
+export const headshot: Media = {
+  kind: "photo",
+  src: "/images/about/headshot",
+  focus: "50% 45%",
+  alt: "Portrait of Aarav Aher in a navy blazer, in a bright multi-storey atrium",
+};
+
+/* ───────────────────────── Nav dropdowns ───────────────────────── */
+
+export type NavMenuItem = {
+  title: string;
+  subtitle: string;
+  href: `#${string}`;
+};
+
+export type NavMenu = {
+  /** Accessible name for the dropdown. */
+  label: string;
+  /** Mobile menu: last row linking to the whole section. */
+  allLabel: string;
+  items: NavMenuItem[];
+};
+
+/** Dropdowns keyed by the nav link they hang off. Rows reuse section data. */
+export const navMenus: Partial<Record<NavLink["href"], NavMenu>> = {
+  "#work": {
+    label: "Case studies",
+    allLabel: "All work",
+    items: caseStudies.map((study) => ({
+      title: study.company,
+      subtitle: study.role,
+      href: `#${study.slug}` as const,
+    })),
+  },
+  "#projects": {
+    label: "Projects, writing & coursework",
+    allLabel: "All projects",
+    items: [
+      ...projectsIndex.featured.map((entry) => ({
+        title: entry.name,
+        subtitle: entry.type,
+        href: `#${entry.slug}` as const,
+      })),
+      { title: "Coursework & Simulations", subtitle: "Northeastern & Glasgow", href: "#coursework" },
+    ],
+  },
 };

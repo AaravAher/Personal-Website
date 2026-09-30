@@ -1,0 +1,94 @@
+{
+  "/images/about/headshot": {
+    "width": 863,
+    "height": 1545
+  },
+  "/images/asha/group-photo": {
+    "width": 1280,
+    "height": 960
+  },
+  "/images/asha/teaching-session": {
+    "width": 1280,
+    "height": 960
+  },
+  "/images/celona/market-research-deck": {
+    "width": 1600,
+    "height": 903
+  },
+  "/images/celona/presenting": {
+    "width": 1588,
+    "height": 1176
+  },
+  "/images/photography/milky-way-joshua-trees": {
+    "width": 1023,
+    "height": 1280
+  },
+  "/images/photography/moon-through-palms": {
+    "width": 960,
+    "height": 1280
+  },
+  "/images/photography/taj-mahal": {
+    "width": 854,
+    "height": 649
+  },
+  "/images/plannrai/ai-coach": {
+    "width": 778,
+    "height": 1600
+  },
+  "/images/plannrai/calendar": {
+    "width": 778,
+    "height": 1600
+  },
+  "/images/plannrai/goals": {
+    "width": 781,
+    "height": 1600
+  },
+  "/images/plannrai/home": {
+    "width": 772,
+    "height": 1600
+  },
+  "/images/projects/basispoint-article": {
+    "width": 1460,
+    "height": 1586
+  },
+  "/images/projects/sitesmith-founders": {
+    "width": 1600,
+    "height": 829
+  },
+  "/images/projects/sitesmith-hero": {
+    "width": 1600,
+    "height": 866
+  },
+  "/images/skillmatics/content-deck": {
+    "width": 1600,
+    "height": 901
+  },
+  "/images/skillmatics/furbitz-gtm-strategy": {
+    "width": 1600,
+    "height": 871
+  },
+  "/images/soccer/medals": {
+    "width": 1280,
+    "height": 742
+  },
+  "/images/soccer/result-3-1-thane-city-state-league": {
+    "width": 1179,
+    "height": 1053
+  },
+  "/images/soccer/result-4-1-conscient-sports": {
+    "width": 1179,
+    "height": 1047
+  },
+  "/images/soccer/result-6-1-mumbai-soccer-prodigies": {
+    "width": 1179,
+    "height": 1048
+  },
+  "/images/soccer/result-7-0-sri-ma": {
+    "width": 1179,
+    "height": 1042
+  },
+  "/images/soccer/solo-in-game": {
+    "width": 1280,
+    "height": 853
+  }
+}

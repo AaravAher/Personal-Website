@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
-import { personal } from "@/content/site";
+import { footerCopy, personal } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 
 export function Footer() {
@@ -56,8 +56,10 @@ export function Footer() {
             ))}
           </ul>
         </div>
-        <p className="mt-10 text-xs text-cream/70">
-          © 2026 {personal.name}. All rights reserved.
+        {/* On the navy footer, the "lighter" text is cream at reduced opacity. */}
+        <p className="mt-10 text-xs italic text-cream/70">{footerCopy.colophon}</p>
+        <p className="mt-2 text-xs text-cream/70">
+          © 2026 {personal.name}. {footerCopy.rights}
         </p>
       </Container>
     </footer>

@@ -1,121 +1,65 @@
-import type { CaseStudy, SlotImage } from "@/content/site";
+"use client";
+
+import type { CaseStudy, Media } from "@/content/site";
 import { workSection } from "@/content/site";
-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
+import { LightboxGroup } from "./Lightbox";
+import { MediaFrame } from "@/components/media/MediaSet";
+import { aspectOf } from "@/components/ui/Picture";
 
-export type IndexedImage = { image: SlotImage; lightboxIndex: number };
-
-/** PlannrAI: four phone screenshots. A row from md up, a snap strip below. */
-export function ScreenshotStrip({
-  company,
-  images,
-}: {
-  company: string;
-  images: IndexedImage[];
-}) {
+/** PlannrAI: phone screenshots in minimal frames. A row from md up, a snap strip below. */
+export function ScreenshotStrip({ company, images }: { company: string; images: Media[] }) {
   return (
-    <div className="relative">
-      <div
-        role="region"
-        tabIndex={0}
-        aria-label={`${company} ${workSection.screenshotsLabel}`}
-        className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0"
-      >
-        {images.map(({ image, lightboxIndex }) => (
-          <div key={image.slot} className="w-[44%] shrink-0 snap-start sm:w-[30%] md:w-auto">
-            <PlaceholderImage
-              image={image}
-              lightboxIndex={lightboxIndex}
-              sizes="(min-width: 768px) 20vw, 45vw"
-              className="rounded-xl"
-            />
-          </div>
-        ))}
-      </div>
-      {/* Scroll hint: fades the right edge while the strip is scrollable. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-linear-to-l from-base to-transparent md:hidden"
-      />
-    </div>
-  );
-}
-
-/** Skillmatics: an asymmetric photo essay (large lead, tall portrait, tiles, wide closer). */
-export function PhotoEssay({ images }: { images: IndexedImage[] }) {
-  const [lead, tall, a, b, wide] = images;
-  const tile = (item: IndexedImage | undefined, className: string, sizes: string) =>
-    item && (
-      <div className={className}>
-        <PlaceholderImage
-          image={item.image}
-          lightboxIndex={item.lightboxIndex}
-          sizing="fill"
-          sizes={sizes}
-          overlayCaption
+    <LightboxGroup images={images}>
+      <div className="relative">
+        <div
+          role="region"
+          tabIndex={0}
+          aria-label={`${company} ${workSection.screenshotsLabel}`}
+          className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0"
+        >
+          {images.map((image, i) => (
+            <figure key={image.src} className="w-[44%] shrink-0 snap-start sm:w-[30%] md:w-auto">
+              <MediaFrame
+                media={image}
+                index={i}
+                ratio={aspectOf(image.src, image.trimTop)}
+                sizes="(min-width: 768px) 16vw, 45vw"
+              />
+              {image.caption && (
+                <figcaption className="mt-2 text-xs leading-snug text-primary-soft">{image.caption}</figcaption>
+              )}
+            </figure>
+          ))}
+        </div>
+        {/* Scroll hint: fades the right edge while the strip is scrollable. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-linear-to-l from-base to-transparent md:hidden"
         />
       </div>
-    );
-
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-      {tile(lead, "col-span-2 aspect-[16/10]", "(min-width: 1024px) 60vw, 100vw")}
-      {tile(tall, "row-span-2", "(min-width: 1024px) 30vw, 50vw")}
-      {tile(a, "aspect-[4/3]", "(min-width: 1024px) 30vw, 50vw")}
-      {tile(b, "aspect-[4/3]", "(min-width: 1024px) 30vw, 50vw")}
-      {tile(wide, "col-span-2 aspect-[21/9]", "(min-width: 1024px) 60vw, 100vw")}
-    </div>
+    </LightboxGroup>
   );
 }
 
-/** Celona: one lead photo over two, then the markets researched. */
-export function MarketsGallery({
-  images,
-  markets = [],
-}: {
-  images: IndexedImage[];
-  markets?: CaseStudy["markets"];
-}) {
-  const [lead, ...rest] = images;
+/** Celona: the markets researched, as outline chips under the images. */
+export function MarketChips({ markets = [] }: { markets?: CaseStudy["markets"] }) {
+  if (!markets.length) return null;
   return (
-    <div>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {lead && (
-          <div className="col-span-2">
-            <PlaceholderImage
-              image={lead.image}
-              lightboxIndex={lead.lightboxIndex}
-              sizes="(min-width: 1024px) 60vw, 100vw"
-            />
-          </div>
-        )}
-        {rest.map(({ image, lightboxIndex }) => (
-          <PlaceholderImage
-            key={image.slot}
-            image={image}
-            lightboxIndex={lightboxIndex}
-            sizes="(min-width: 1024px) 30vw, 50vw"
-          />
+    <div className="mt-8">
+      <h4 className="text-xs font-medium uppercase tracking-[0.2em] text-primary-soft">
+        {workSection.marketsHeading}
+      </h4>
+      <ul className="mt-4 flex flex-wrap gap-2">
+        {markets.map((m) => (
+          <li
+            key={m.iso3}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-3.5 py-1.5 text-sm text-primary"
+          >
+            <span aria-hidden>{m.flag}</span>
+            {m.country}
+          </li>
         ))}
-      </div>
-
-      {markets.length > 0 && (
-        <div className="mt-8">
-          <h4 className="text-xs font-medium uppercase tracking-[0.2em] text-primary-soft">
-            {workSection.marketsHeading}
-          </h4>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {markets.map((m) => (
-              <li
-                key={m.iso3}
-                className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-3.5 py-1.5 text-sm text-primary"
-              >
-                <span aria-hidden>{m.flag}</span>
-                {m.country}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      </ul>
     </div>
   );
 }
