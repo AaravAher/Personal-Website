@@ -5,7 +5,9 @@ import { AnimatePresence, motion, useInView } from "framer-motion";
 import { languages, languagesSection } from "@/content/site";
 import { usePrefersReducedMotion } from "@/components/ui/usePrefersReducedMotion";
 
-const STEP_MS = 1600;
+/** How long each phrase stays on screen, and how long the crossfade takes. */
+const STEP_MS = 2400;
+const TRANSITION_S = 0.6;
 
 /** "More about me", cycling through the languages I speak. A short band between sections. */
 export function LanguageInterlude() {
@@ -64,7 +66,7 @@ export function LanguageInterlude() {
                   initial={{ opacity: 0, y: 18 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -18 }}
-                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: TRANSITION_S, ease: [0.22, 1, 0.36, 1] }}
                 >
                   {current.moreAboutMe}
                 </motion.p>

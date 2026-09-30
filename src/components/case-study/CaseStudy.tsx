@@ -90,9 +90,9 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
           </dl>
         </Reveal>
 
-        {/* The video stays hidden until it has an id: an empty frame looks unfinished. */}
-        {study.media.video?.id && (
-          <Reveal delay={0.05} className="mt-12">
+        {/* Video (or its "coming soon" placeholder), full width above the columns, capped at 960px. */}
+        {study.media.video && (
+          <Reveal delay={0.05} className="mt-12 max-w-[960px]">
             <VideoEmbed video={study.media.video} />
           </Reveal>
         )}
@@ -129,7 +129,8 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
             </ul>
           </Reveal>
 
-          <Reveal delay={0.1} className="lg:col-span-7">
+          {/* If the text runs longer than the media, the media stays in view while reading. */}
+          <Reveal delay={0.1} className="lg:sticky lg:top-[calc(var(--nav-height)+24px)] lg:col-span-7 lg:self-start">
             <Media study={study} />
           </Reveal>
         </div>

@@ -18,13 +18,13 @@ const project = (lng: number, lat: number) => [(lng - lngMin) * lngScale, (latMa
  */
 const CITIES_POP_AT = 1.2; // s after mount: cities appear with the stats
 const FIRST_FLIGHT_MS = STATS_SETTLED_MS + 600;
-const FLIGHT_EVERY_MS = [16_000, 18_000] as const; // start to start
+const FLIGHT_EVERY_MS = [14_000, 16_000] as const; // start to start
 // Leg duration grows with its length, so speed stays roughly constant
-// (≈2.9s / 2.2s / 1.7s for the current route).
-const LEG_BASE_MS = 1100;
-const LEG_MS_PER_UNIT = 1.9;
-const STOP_PAUSE_MS = 250; // brief pause at each intermediate stop
-const HANDOFF_MS = 600; // previous leg fades out as the next starts
+// (≈2.2s / 1.7s / 1.3s for the current route; the whole flight ≈5.5s).
+const LEG_BASE_MS = 825;
+const LEG_MS_PER_UNIT = 1.425;
+const STOP_PAUSE_MS = 180; // brief pause at each intermediate stop
+const HANDOFF_MS = 450; // previous leg fades out as the next starts
 const LANDING_MS = 300; // plane shrinks into Boston over the final 300ms
 const LINGER_MS = 1500; // last leg stays visible after landing…
 const FADE_MS = 600; // …then fades, leaving just the cities

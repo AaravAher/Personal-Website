@@ -39,8 +39,10 @@ export type EducationItem = {
  *   photo       cropped to fill its frame around `focus`
  *   document    slides, docs and page screenshots: never cropped, shown on a mat
  *   screenshot  phone screens, in a minimal phone frame
+ *   slide       a 16:9 slide shown on a projector screen (switch any slide
+ *               cover to it by changing its kind)
  */
-export type MediaKind = "photo" | "document" | "screenshot";
+export type MediaKind = "photo" | "document" | "screenshot" | "slide";
 
 export type Media = {
   src: string;
@@ -51,6 +53,8 @@ export type Media = {
   focus?: string;
   /** Screenshots: share of the height to trim from the top (phone status bar). */
   trimTop?: number;
+  /** Slides: total slides in the deck, for the "01 / 24" counter. */
+  slides?: number;
 };
 
 export type Metric = {
@@ -89,6 +93,8 @@ export type VideoSource = {
   title: string;
   /** Optional poster image. YouTube falls back to its own thumbnail. */
   poster?: string;
+  /** Built image (base path) blurred behind the "coming soon" placeholder. */
+  placeholderImage?: string;
 };
 
 export type CaseStudy = {
@@ -375,7 +381,8 @@ export const workSection = {
 
 /** Shared UI strings for media components. */
 export const mediaCopy = {
-  videoComingSoon: "Product walkthrough — coming soon",
+  videoPlaceholderTitle: "Intro video",
+  videoComingSoon: "Coming soon",
   playVideo: "Play video",
   newTab: "(opens in a new tab)",
   openImage: "View larger",
@@ -419,7 +426,7 @@ export const caseStudies: CaseStudy[] = [
     skills: ["Product", "GTM", "User Acquisition", "Brand Positioning"],
     media: {
       // Paste the YouTube or Vimeo id (not the full URL) once the video is up.
-      video: { provider: "youtube", id: "", title: "PlannrAI product walkthrough" },
+      video: { provider: "youtube", id: "", title: "PlannrAI intro video", placeholderImage: "/images/plannrai/home" },
       // No status bars in these screenshots (they start at the app header), so no trim.
       images: [
         { kind: "screenshot", src: "/images/plannrai/home", caption: "Home: plan my day", alt: "PlannrAI home screen with a Plan My Day button, the next scheduled block, a mood check-in (low, optimal, high) and a Mindspace note field" },
@@ -489,7 +496,8 @@ export const caseStudies: CaseStudy[] = [
     media: {
       images: [
         { kind: "photo", src: "/images/celona/presenting", focus: "60% 40%", caption: "Presenting the foreign-market analysis", alt: "Aarav presenting market research to Celona's team around a conference table, with the analysis on the wall screen behind him" },
-        { kind: "document", src: "/images/celona/market-research-deck", caption: "Six-market analysis deck", alt: "Title slide reading International Expansion of Celona: Market Research" },
+        // TODO: Aarav to set the real slide count.
+        { kind: "slide", slides: 24, src: "/images/celona/market-research-deck", caption: "Six-market analysis deck", alt: "Title slide reading International Expansion of Celona: Market Research" },
       ],
     },
     markets: [
@@ -618,10 +626,10 @@ export const languagesSection = {
 
 export const languages: Language[] = [
   { name: "English", nativeName: "English", moreAboutMe: "More about me", lang: "en" },
+  { name: "Spanish", nativeName: "Español", moreAboutMe: "Más sobre mí", lang: "es" },
   { name: "Hindi", nativeName: "हिंदी", moreAboutMe: "मेरे बारे में कुछ और", lang: "hi" },
   { name: "Marathi", nativeName: "मराठी", moreAboutMe: "माझ्याबद्दल अधिक", lang: "mr" },
   { name: "Gujarati", nativeName: "ગુજરાતી", moreAboutMe: "મારા વિશે વધુ", lang: "gu" },
-  { name: "Spanish", nativeName: "Español", moreAboutMe: "Más sobre mí", lang: "es" },
 ];
 
 export const offTheClockSection = {
