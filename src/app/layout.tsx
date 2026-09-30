@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Instrument_Serif, Noto_Serif_Devanagari, Noto_Serif_Gujarati } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { MotionProvider } from "@/components/MotionProvider";
-import { personal } from "@/content/site";
+import { caseStudies, headshot, languages, personal, seo } from "@/content/site";
+import { colors } from "@/content/tokens";
 import "./globals.css";
 
 const inter = Inter({
@@ -37,14 +39,59 @@ const notoGujarati = Noto_Serif_Gujarati({
   preload: false,
 });
 
+// The share image (opengraph-image.tsx / twitter-image.tsx) and icons are
+// file-based, so Next adds their tags automatically.
 export const metadata: Metadata = {
-  title: `${personal.name} | International Business, Northeastern`,
-  description: personal.tagline,
+  metadataBase: new URL(seo.siteUrl),
+  title: { default: seo.title, template: seo.titleTemplate },
+  description: seo.description,
+  applicationName: seo.siteName,
+  authors: [{ name: personal.name, url: seo.siteUrl }],
+  creator: personal.name,
+  keywords: seo.keywords,
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: seo.siteName,
+    title: seo.title,
+    description: seo.description,
+    locale: seo.locale,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: seo.title,
+    description: seo.description,
+  },
 };
 
 export const viewport: Viewport = {
-  // Mobile browser chrome colour. Metadata can't read CSS variables; keep in sync with --color-base.
-  themeColor: "#faf7f0",
+  themeColor: colors.base,
+  colorScheme: "light",
+};
+
+/** Person structured data, so search engines can match "Aarav Aher" to this site. */
+const plannrai = caseStudies.find((c) => c.slug === "plannrai");
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: personal.name,
+  url: seo.siteUrl,
+  image: `${seo.siteUrl}${headshot.src}-1600w.webp`,
+  email: personal.email,
+  jobTitle: seo.jobTitle,
+  description: seo.description,
+  affiliation: {
+    "@type": "CollegeOrUniversity",
+    name: seo.university,
+    department: { "@type": "Organization", name: seo.school },
+  },
+  knowsLanguage: languages.map((l) => l.name),
+  sameAs: [personal.linkedin],
+  ...(plannrai?.url && {
+    worksFor: { "@type": "Organization", name: plannrai.company, url: plannrai.url },
+  }),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -54,7 +101,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${instrumentSerif.variable} ${notoDevanagari.variable} ${notoGujarati.variable} antialiased`}
     >
       <body className="bg-base font-sans text-primary">
+        <script
+          type="application/ld+json"
+          // JSON.stringify of our own data; "<" escaped so it can't close the tag.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd).replace(/</g, "\\u003c") }}
+        />
         <MotionProvider>{children}</MotionProvider>
+        <Analytics />
       </body>
     </html>
   );

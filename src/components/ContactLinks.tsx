@@ -28,13 +28,13 @@ export function ContactLinks({ className = "" }: { className?: string }) {
   ];
 
   return (
-    <ul className={`flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-7 sm:gap-y-3 ${className}`}>
+    <ul className={`flex flex-col sm:flex-row sm:flex-wrap sm:gap-x-7 sm:gap-y-3 ${className}`}>
       {items.map((item) => (
         <li key={item.href}>
           <a
             href={item.href}
             {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            className="group inline-flex items-center gap-2 text-sm text-primary"
+            className="group inline-flex min-h-11 items-center gap-2 text-sm text-primary sm:min-h-0"
           >
             <span className="text-primary-soft">{item.icon}</span>
             <span className="underline decoration-transparent decoration-2 underline-offset-4 transition-colors group-hover:decoration-accent-strong">

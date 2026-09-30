@@ -27,7 +27,7 @@ export function Footer() {
         </h2>
         <a
           href={`mailto:${personal.email}`}
-          className="mt-8 inline-block break-all text-lg underline decoration-accent-bright decoration-2 underline-offset-8 transition-colors hover:text-cream/80 sm:text-2xl"
+          className="mt-8 inline-block break-all py-2 text-lg underline decoration-accent-bright decoration-2 underline-offset-8 transition-colors hover:text-cream/80 sm:text-2xl"
         >
           {personal.email}
         </a>
@@ -42,7 +42,7 @@ export function Footer() {
                   {...(link.external
                     ? { target: "_blank", rel: "noopener noreferrer" }
                     : {})}
-                  className="inline-flex items-center gap-1 underline decoration-transparent decoration-2 underline-offset-4 transition-colors hover:decoration-accent-bright"
+                  className="inline-flex min-h-11 min-w-11 items-center gap-1 underline decoration-transparent md:min-h-0 md:min-w-0 decoration-2 underline-offset-4 transition-colors hover:decoration-accent-bright"
                 >
                   {link.label}
                   {link.external && (

@@ -15,6 +15,8 @@ type NavDropdownProps = {
   id: string;
   label: string;
   href: string;
+  /** Prefix for in-page row links ("/" off the home page). */
+  linkBase?: string;
   menu: NavMenu;
   open: boolean;
   /** Another dropdown is open: this one should vanish instantly, not fade. */
@@ -33,6 +35,7 @@ export function NavDropdown({
   id,
   label,
   href,
+  linkBase = "",
   menu,
   open,
   switching,
@@ -199,7 +202,7 @@ export function NavDropdown({
                 {menu.items.map((row) => (
                   <li key={row.href}>
                     <a
-                      href={row.href}
+                      href={`${linkBase}${row.href}`}
                       // No hover suppression here: the row under the pointer is
                       // removed, so no pointerleave would ever clear it.
                       onClick={() => close()}

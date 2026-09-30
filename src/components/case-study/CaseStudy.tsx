@@ -59,7 +59,7 @@ export function CaseStudy({ study, index }: { study: CaseStudyData; index: numbe
                 href={study.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-primary px-4 py-2 text-sm text-primary transition-colors hover:border-accent hover:text-accent-strong"
+                className="mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-full border border-primary px-4 py-2 text-sm text-primary transition-colors hover:border-accent hover:text-accent-strong"
               >
                 {study.linkLabel}
                 <ArrowUpRight size={15} aria-hidden />

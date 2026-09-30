@@ -72,20 +72,6 @@ export type Market = {
   region: string;
 };
 
-export type ImageAspect = "landscape" | "portrait" | "square";
-
-export type SlotImage = {
-  /** Leave empty to show a placeholder. Fill with e.g. "/images/plannrai/screen-1.png". */
-  src: string;
-  alt: string;
-  caption?: string;
-  aspect: ImageAspect;
-  /** Label shown on the placeholder, e.g. "PlannrAI screenshot 2". */
-  slot: string;
-  /** Overrides the default recommended size for this aspect. */
-  recommendedSize?: string;
-};
-
 export type VideoSource = {
   provider: "youtube" | "vimeo";
   /** The video id only, e.g. "dQw4w9WgXcQ". Leave empty to show "coming soon". */
@@ -220,7 +206,6 @@ export const personal: Personal = {
   firstName: "Aarav",
   monogram: "AA",
   overline: "International Business · Northeastern \u201929",
-  // TODO: Aarav to edit
   tagline: "Building at the intersection of markets, products and people.",
   location: "Mumbai → Boston",
   email: "aher.aa@northeastern.edu",
@@ -285,6 +270,40 @@ export const route: RouteStop[] = [
   { city: "Boston", lat: 42.36, lng: -71.06, label: "Boston", note: "Northeastern · Now", noteHighlight: "Now", current: true, bow: 0.22 },
 ];
 
+/** Search, sharing and structured data. Used by the layout, share image and 404 page. */
+export const seo = {
+  siteUrl: "https://www.aaravaher.com",
+  domain: "aaravaher.com",
+  siteName: "Aarav Aher",
+  title: "Aarav Aher: International Business Student, Northeastern ’29",
+  titleTemplate: "%s · Aarav Aher",
+  description:
+    "Aarav Aher is an International Business student at Northeastern (Supply Chain & Marketing), co-founder of PlannrAI, and open to Spring 2027 co-ops.",
+  keywords: [
+    "Aarav Aher",
+    "Northeastern University",
+    "International Business",
+    "Supply Chain",
+    "Marketing",
+    "PlannrAI",
+    "co-op",
+    "D’Amore-McKim",
+  ],
+  locale: "en_US",
+  jobTitle: "Student",
+  university: "Northeastern University",
+  school: "D’Amore-McKim School of Business",
+  shareImageAlt: "Aarav Aher, International Business student at Northeastern, open to Spring 2027 co-op",
+  shareAvailability: "Open to Spring 2027 Co-op",
+};
+
+export const notFoundCopy = {
+  overline: "404",
+  title: "This page took a wrong turn.",
+  text: "The page you’re looking for doesn’t exist or has moved.",
+  cta: "Back to aaravaher.com",
+};
+
 /** Hero UI copy. */
 export const heroCopy = {
   emailCta: "Email me",
@@ -340,14 +359,14 @@ export const nav: NavLink[] = [
 ];
 
 export const bio =
-  "As a second-year International Business student at Northeastern University, with a concentration in Marketing Analytics and Supply Chain Management and a passion for entrepreneurship, global markets, and social impact, I am committed to building experiences that create meaningful change. I thrive on taking initiative, excel at working across cultures and industries, and bring drive to everything I pursue. With a foundation in international business and a focus on continuous growth, I'm eager to leverage my skills to make a difference and build something worthwhile.";
+  "As a second-year International Business student at Northeastern University, with a concentration in Marketing and Supply Chain Management and a passion for entrepreneurship, global markets, and social impact, I am committed to building experiences that create meaningful change. I thrive on taking initiative, excel at working across cultures and industries, and bring drive to everything I pursue. With a foundation in international business and a focus on continuous growth, I’m eager to leverage my skills to make a difference and build something worthwhile.";
 
 export const education: EducationItem[] = [
   {
     school: "Northeastern University",
     detail: "BS International Business, Supply Chain & Marketing · May 2029",
     location: "Boston, MA",
-    notes: "D'Amore-McKim School of Business",
+    notes: "D’Amore-McKim School of Business",
   },
   {
     school: "University of Glasgow",
@@ -367,7 +386,6 @@ export const education: EducationItem[] = [
 export const workSection = {
   eyebrow: "Work",
   title: "Selected work",
-  // TODO: Aarav to rewrite
   intro:
     "Three roles where I helped a product or a brand reach a new market, from the first research to units sold.",
   caseStudyLabel: "Case study",
@@ -390,14 +408,6 @@ export const mediaCopy = {
   closeLightbox: "Close image viewer",
   previousImage: "Previous image",
   nextImage: "Next image",
-  recommendedPrefix: "Recommended",
-};
-
-/** Default recommended upload size per image aspect (shown on placeholders). */
-export const recommendedSizes: Record<ImageAspect, string> = {
-  landscape: "1600 × 1000 px",
-  portrait: "1170 × 2532 px",
-  square: "1200 × 1200 px",
 };
 
 export const caseStudies: CaseStudy[] = [
@@ -409,11 +419,9 @@ export const caseStudies: CaseStudy[] = [
     role: "Co-Founder & Developer",
     location: "Boston, MA",
     dates: "Jan 2026 – Present",
-    // TODO: Aarav to rewrite
     oneLiner: "An AI-powered day-planning app built for college students.",
-    // TODO: Aarav to rewrite
     context:
-      "College students juggle classes, clubs, jobs and deadlines, and most planners leave them to stitch it all together by hand. PlannrAI uses AI to turn that into a realistic plan for the day. I co-founded it in January 2026 and own both how it's built and how it reaches students.",
+      "College students juggle classes, clubs, jobs and deadlines, and most planners leave them to stitch it all together by hand. PlannrAI uses AI to turn that into a realistic plan for the day. I co-founded it in January 2026 and own both how it’s built and how it reaches students.",
     whatIDid: [
       "Built and developed the core application, contributing directly to product architecture and technical implementation.",
       "Leading all marketing and sales efforts, including go-to-market strategy, user acquisition and brand positioning.",
@@ -432,7 +440,7 @@ export const caseStudies: CaseStudy[] = [
         { kind: "screenshot", src: "/images/plannrai/home", caption: "Home: plan my day", alt: "PlannrAI home screen with a Plan My Day button, the next scheduled block, a mood check-in (low, optimal, high) and a Mindspace note field" },
         { kind: "screenshot", src: "/images/plannrai/calendar", caption: "Day planner", alt: "PlannrAI day view for Tuesday 29 September with time blocks for dinner, PlannrAI work and studying" },
         { kind: "screenshot", src: "/images/plannrai/goals", caption: "Goals and AI strategies", alt: "PlannrAI goals screen tracking weekly minutes for gym, sports, SiteSmith and PlannrAI, each with a Strategy button" },
-        { kind: "screenshot", src: "/images/plannrai/ai-coach", caption: "Donna, the AI chief of staff", alt: "Chat with Donna, PlannrAI's AI chief of staff, moving tasks to later in the week after a request to reduce today's load" },
+        { kind: "screenshot", src: "/images/plannrai/ai-coach", caption: "Donna, the AI chief of staff", alt: "Chat with Donna, PlannrAI’s AI chief of staff, moving tasks to later in the week after a request to reduce today’s load" },
       ],
     },
   },
@@ -442,17 +450,15 @@ export const caseStudies: CaseStudy[] = [
     role: "Marketing & Strategy Intern",
     location: "Mumbai, India",
     dates: "May – Jul 2026",
-    // TODO: Aarav to rewrite
     oneLiner:
       "Took an adult party-games brand from online-only into physical retail in Mumbai.",
-    // TODO: Aarav to rewrite
     context:
-      "Gouda Games, Skillmatics' adult party-games brand, had only ever sold online. Summer 2026 was its first move onto physical shelves in Mumbai, where placement, pricing and store format decide whether a game gets picked up. I joined the marketing and strategy team to help make that launch work.",
+      "Gouda Games, Skillmatics’ adult party-games brand, had only ever sold online. Summer 2026 was its first move onto physical shelves in Mumbai, where placement, pricing and store format decide whether a game gets picked up. I joined the marketing and strategy team to help make that launch work.",
     whatIDid: [
-      "Led a retail distribution initiative to establish Gouda Games' first physical presence across stores in Mumbai, identifying 20+ optimal retail locations and developing product placement and pricing strategies across multiple store formats.",
+      "Led a retail distribution initiative to establish Gouda Games’ first physical presence across stores in Mumbai, identifying 20+ optimal retail locations and developing product placement and pricing strategies across multiple store formats.",
       "Represented Gouda Games at the All You Can Mumbai event, driving direct sales and moving 100+ units on the ground.",
       "Conducted market research for two new product launches and prepared and presented GTM documentation to the Founder and CPO.",
-      "Contributed to a record-breaking sales day for the brand: 301 units sold in a single day, the highest in the company's history.",
+      "Contributed to a record-breaking sales day for the brand: 301 units sold in a single day, the highest in the company’s history.",
     ],
     metrics: [
       { value: "301", label: "units in one day, a company record" },
@@ -473,13 +479,11 @@ export const caseStudies: CaseStudy[] = [
     role: "International Business Intern",
     location: "Bay Area, CA",
     dates: "Apr – Jun 2024",
-    // TODO: Aarav to rewrite
     oneLiner: "Market research across six countries ahead of a global expansion.",
-    // TODO: Aarav to rewrite
     context:
       "Celona was preparing to expand beyond the US and needed to know which international markets to prioritise. I joined the international business department to research six candidate markets across four regions and turn the findings into something leadership could act on.",
     whatIDid: [
-      "Joined the international business department ahead of the company's global expansion, conducting primary market research across 6 target markets.",
+      "Joined the international business department ahead of the company’s global expansion, conducting primary market research across 6 target markets.",
       "Synthesized competitive, regulatory and demand data into a comprehensive foreign-market analysis.",
       "Presented the analysis to the CEO and 20+ leaders across international business and marketing.",
     ],
@@ -495,8 +499,7 @@ export const caseStudies: CaseStudy[] = [
     ],
     media: {
       images: [
-        { kind: "photo", src: "/images/celona/presenting", focus: "60% 40%", caption: "Presenting the foreign-market analysis", alt: "Aarav presenting market research to Celona's team around a conference table, with the analysis on the wall screen behind him" },
-        // TODO: Aarav to set the real slide count.
+        { kind: "photo", src: "/images/celona/presenting", focus: "60% 40%", caption: "Presenting the foreign-market analysis", alt: "Aarav presenting market research to Celona’s team around a conference table, with the analysis on the wall screen behind him" },
         { kind: "slide", slides: 24, src: "/images/celona/market-research-deck", caption: "Six-market analysis deck", alt: "Title slide reading International Expansion of Celona: Market Research" },
       ],
     },
@@ -558,18 +561,18 @@ export const projectsIndex = {
         "A Mumbai-based, AI-powered web design studio I co-founded with two friends. We build custom websites for personal brands and small businesses, fast and with no middlemen: clients work directly with the three of us from direction and design through to delivery.",
       url: "https://www.sitesmith.co.in/",
       linkLabel: "Visit site",
-      preview: { kind: "document", src: "/images/projects/sitesmith-hero", alt: "SiteSmith homepage: 'Websites that move at the speed of your idea' over a mechanical keyboard" },
+      preview: { kind: "document", src: "/images/projects/sitesmith-hero", alt: "SiteSmith homepage: ’Websites that move at the speed of your idea’ over a mechanical keyboard" },
     },
     {
       slug: "basispoint",
       name: "BasisPoint Insight",
       type: "Writing · Published author",
       description:
-        "Published author at BasisPoint Insight. My piece on Portugal's 1–1 World Cup draw with DR Congo argues the result came down to a midfield that failed to create chances, not to Cristiano Ronaldo.",
+        "Published author at BasisPoint Insight. My piece on Portugal’s 1–1 World Cup draw with DR Congo argues the result came down to a midfield that failed to create chances, not to Cristiano Ronaldo.",
       // Optional author/profile page. Empty: the row links to the latest article.
       url: "",
       linkLabel: "Read article",
-      preview: { kind: "document", src: "/images/projects/basispoint-article", alt: "Aarav's BasisPoint Insight article on Portugal's 1–1 draw, with a photo of Cristiano Ronaldo and his byline" },
+      preview: { kind: "document", src: "/images/projects/basispoint-article", alt: "Aarav’s BasisPoint Insight article on Portugal’s 1–1 draw, with a photo of Cristiano Ronaldo and his byline" },
       previewAlign: "top",
       articles: [
         {
@@ -611,7 +614,7 @@ export const projectsIndex = {
     { name: "Market-Entry Simulation", theme: "Strategy", completed: true },
     { name: "Supply-Chain Management Simulation", theme: "Operations", completed: true },
   ] satisfies Simulation[] as Simulation[],
-  simulationsNote: "Run through D'Amore-McKim School of Business, Northeastern.",
+  simulationsNote: "Run through D’Amore-McKim School of Business, Northeastern.",
 };
 
 /** The most recent article by `published` (YYYY-MM). */
@@ -658,7 +661,6 @@ export const chapters: Chapter[] = [
     overline: "Photography",
     title: "Through the lens",
     meta: "Ongoing",
-    // TODO: Aarav to personalise
     text: "Photography is how I slow down and notice things. A few of my favourite frames.",
     layout: "gallery",
     media: [

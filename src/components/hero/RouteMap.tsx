@@ -2,14 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import mapData from "@/content/map-dots.json";
-import { heroCopy, route } from "@/content/site";
+import { heroCopy } from "@/content/site";
 import { usePrefersReducedMotion } from "@/components/ui/usePrefersReducedMotion";
 import { STATS_SETTLED_MS } from "./HeroStats";
-
-const [, , W, H] = mapData.viewBox;
-const { lngMin, latMax, lngScale, latScale } = mapData.projection;
-const project = (lng: number, lat: number) => [(lng - lngMin) * lngScale, (latMax - lat) * latScale] as const;
+import { DOTS_PATH, LEGS, MAP_H as H, MAP_W as W, STOPS } from "./routeGeometry";
 
 /*
  * The map at rest shows only land and the four cities. Each flight draws the
@@ -34,26 +30,6 @@ const CONTRAIL = 55; // viewBox units behind the plane (~50px on wide screens)
 const CITY_R = 4;
 const CURRENT_R = 5.75;
 const CURRENT_HALO_R = 10.35;
-const DEFAULT_BOW = 0.22;
-
-// All of this is static: computed once at module load.
-const DOTS_PATH = mapData.dots
-  .map(([x, y]) => `M${x - mapData.dotRadius},${y}a${mapData.dotRadius},${mapData.dotRadius} 0 1,0 ${mapData.dotRadius * 2},0a${mapData.dotRadius},${mapData.dotRadius} 0 1,0 -${mapData.dotRadius * 2},0`)
-  .join("");
-
-const STOPS = route.map((stop) => {
-  const [x, y] = project(stop.lng, stop.lat);
-  return { ...stop, x, y };
-});
-
-/** One quadratic arc per leg, bowing north by the arriving stop's `bow`. */
-const LEGS = STOPS.slice(1).map((b, i) => {
-  const a = STOPS[i];
-  const len = Math.hypot(b.x - a.x, b.y - a.y);
-  const cx = (a.x + b.x) / 2;
-  const cy = (a.y + b.y) / 2 - len * (b.bow ?? DEFAULT_BOW);
-  return `M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`;
-});
 const LAST_LEG = LEGS.length - 1;
 
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
