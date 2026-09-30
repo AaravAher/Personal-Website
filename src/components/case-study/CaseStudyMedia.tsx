@@ -6,7 +6,10 @@ import { LightboxGroup } from "./Lightbox";
 import { MediaFrame } from "@/components/media/MediaSet";
 import { aspectOf } from "@/components/ui/Picture";
 
-/** PlannrAI: phone screenshots in minimal frames. A row from md up, a snap strip below. */
+/**
+ * PlannrAI: phone screenshots in minimal frames, as the case study's lead
+ * visual. Four across from lg (≈260px each); a snap-scroll strip below that.
+ */
 export function ScreenshotStrip({ company, images }: { company: string; images: Media[] }) {
   return (
     <LightboxGroup images={images}>
@@ -15,15 +18,15 @@ export function ScreenshotStrip({ company, images }: { company: string; images: 
           role="region"
           tabIndex={0}
           aria-label={`${company} ${workSection.screenshotsLabel}`}
-          className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0"
+          className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-[26px] lg:overflow-visible lg:px-0"
         >
           {images.map((image, i) => (
-            <figure key={image.src} className="w-[44%] shrink-0 snap-start sm:w-[30%] md:w-auto">
+            <figure key={image.src} className="w-[44%] shrink-0 snap-start sm:w-[30%] md:w-[27%] lg:w-auto">
               <MediaFrame
                 media={image}
                 index={i}
                 ratio={aspectOf(image.src, image.trimTop)}
-                sizes="(min-width: 768px) 16vw, 45vw"
+                sizes="(min-width: 1024px) 280px, (min-width: 640px) 30vw, 45vw"
               />
               {image.caption && (
                 <figcaption className="mt-2 text-xs leading-snug text-primary-soft">{image.caption}</figcaption>
@@ -34,7 +37,7 @@ export function ScreenshotStrip({ company, images }: { company: string; images: 
         {/* Scroll hint: fades the right edge while the strip is scrollable. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-linear-to-l from-base to-transparent md:hidden"
+          className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-linear-to-l from-base to-transparent lg:hidden"
         />
       </div>
     </LightboxGroup>

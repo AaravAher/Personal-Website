@@ -73,6 +73,8 @@ export type Market = {
 };
 
 export type VideoSource = {
+  /** Off: nothing renders at all. On with an empty id: the "coming soon" placeholder. */
+  enabled: boolean;
   provider: "youtube" | "vimeo";
   /** The video id only, e.g. "dQw4w9WgXcQ". Leave empty to show "coming soon". */
   id: string;
@@ -434,7 +436,9 @@ export const caseStudies: CaseStudy[] = [
     skills: ["Product", "GTM", "User Acquisition", "Brand Positioning"],
     media: {
       // Paste the YouTube or Vimeo id (not the full URL) once the video is up.
-      video: { provider: "youtube", id: "", title: "PlannrAI intro video", placeholderImage: "/images/plannrai/home" },
+      // PlannrAI intro video. Set enabled: true and add the YouTube/Vimeo id to show it
+      // full-width above the screenshots. While false, nothing renders.
+      video: { enabled: false, provider: "youtube", id: "", title: "PlannrAI intro video", placeholderImage: "/images/plannrai/home" },
       // No status bars in these screenshots (they start at the app header), so no trim.
       images: [
         { kind: "screenshot", src: "/images/plannrai/home", caption: "Home: plan my day", alt: "PlannrAI home screen with a Plan My Day button, the next scheduled block, a mood check-in (low, optimal, high) and a Mindspace note field" },
