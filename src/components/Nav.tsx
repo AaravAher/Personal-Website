@@ -22,7 +22,12 @@ const SECTION_TO_NAV: Record<string, string> = {
   contact: "#contact",
 };
 
-export function Nav() {
+/**
+ * The site nav. On the home page, section links are in-page anchors. Elsewhere
+ * (the 404 page), pass linkBase="/" so they lead back to the home page sections.
+ */
+export function Nav({ linkBase = "" }: { linkBase?: string } = {}) {
+  const to = (href: string) => (href.startsWith("#") ? `${linkBase}${href}` : href);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -127,8 +132,8 @@ export function Nav() {
           className="mx-auto flex h-[var(--nav-height)] w-full max-w-[1200px] items-center justify-between px-5 sm:px-8"
         >
           <a
-            href="#top"
-            className="font-serif text-2xl leading-none tracking-tight text-primary"
+            href={to("#top")}
+            className="inline-flex min-h-11 min-w-11 items-center font-serif text-2xl leading-none tracking-tight text-primary"
             aria-label={`${personal.name}, back to top`}
             onClick={closeMobile}
           >
@@ -145,7 +150,8 @@ export function Nav() {
                     key={link.href}
                     id={link.href.slice(1)}
                     label={link.label}
-                    href={link.href}
+                    href={to(link.href)}
+                    linkBase={linkBase}
                     menu={menu}
                     open={openMenu === link.href}
                     switching={openMenu !== null && openMenu !== link.href}
@@ -158,7 +164,7 @@ export function Nav() {
               return (
                 <li key={link.href} className="flex items-center">
                   <a
-                    href={link.href}
+                    href={to(link.href)}
                     aria-current={isActive ? "location" : undefined}
                     className="group relative py-2 text-sm text-primary"
                   >
@@ -184,12 +190,13 @@ export function Nav() {
               size="sm"
               icon={<FileText size={15} aria-hidden />}
               aria-label={navCopy.resumeLabel}
+              className="max-md:h-11"
             >
               {navCopy.resume}
             </Button>
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-primary/5 md:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/5 md:hidden"
               aria-expanded={open}
               aria-controls="mobile-menu"
               aria-label={open ? navCopy.closeMenu : navCopy.openMenu}
@@ -239,7 +246,7 @@ export function Nav() {
                       {menu.items.map((row) => (
                         <li key={row.href}>
                           <a
-                            href={row.href}
+                            href={to(row.href)}
                             onClick={closeMobile}
                             className="block rounded-md px-3 py-2.5 hover:bg-accent-soft"
                           >
@@ -252,7 +259,7 @@ export function Nav() {
                       ))}
                       <li>
                         <a
-                          href={link.href}
+                          href={to(link.href)}
                           onClick={closeMobile}
                           className="block rounded-md px-3 py-2.5 text-sm text-primary underline decoration-primary/25 underline-offset-4 hover:bg-accent-soft"
                         >
@@ -267,7 +274,7 @@ export function Nav() {
               return (
                 <li key={link.href}>
                   <a
-                    href={link.href}
+                    href={to(link.href)}
                     onClick={closeMobile}
                     aria-current={isActive ? "location" : undefined}
                     className="flex items-center justify-between border-b border-primary/10 py-4 font-serif text-2xl text-primary"

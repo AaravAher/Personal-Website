@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import type { CSSProperties } from "react";
 import { atAGlance, heroClock, heroCopy, personal } from "@/content/site";
 import { FLAP_MAX_SETTLE_MS, SplitFlap } from "./SplitFlap";
 import { AvailabilityDot } from "./AvailabilityDot";
@@ -14,15 +14,15 @@ export const STATS_SETTLED_MS =
   FLAP_START_MS + (atAGlance.length - 1) * STAT_STAGGER_MS + FLAP_MAX_SETTLE_MS;
 
 /** The hero's stats strip: four label/value pairs that flip in like a departures board. */
-export function HeroStats({ variants }: { variants: Variants }) {
+export function HeroStats() {
   const time = useBostonTime();
 
   return (
-    <motion.dl
-      variants={variants}
-      custom={FLAP_START_MS / 1000}
+    <dl
+      // Fades in (CSS, .hero-in) as the flaps begin.
+      style={{ "--d": `${FLAP_START_MS / 1000}s` } as CSSProperties}
       aria-label={heroCopy.statsLabel}
-      className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-primary/15 py-6 sm:gap-x-10 lg:grid-cols-4 lg:py-7"
+      className="hero-in grid grid-cols-2 gap-x-6 gap-y-5 border-t border-primary/15 py-6 sm:gap-x-10 lg:grid-cols-4 lg:py-7"
     >
       {atAGlance.map((stat, i) => {
         const delay = FLAP_START_MS + i * STAT_STAGGER_MS;
@@ -40,7 +40,7 @@ export function HeroStats({ variants }: { variants: Variants }) {
               ) : stat.kind === "availability" ? (
                 <a
                   href={`mailto:${personal.email}`}
-                  className="inline-flex items-center gap-2 underline decoration-transparent decoration-1 underline-offset-4 transition-colors hover:decoration-accent"
+                  className="inline-flex items-center gap-2 max-md:-my-[13px] max-md:py-[13px] underline decoration-transparent decoration-1 underline-offset-4 transition-colors hover:decoration-accent"
                 >
                   <AvailabilityDot />
                   <span className="sr-only">{heroCopy.availabilityLabel} </span>
@@ -53,6 +53,6 @@ export function HeroStats({ variants }: { variants: Variants }) {
           </div>
         );
       })}
-    </motion.dl>
+    </dl>
   );
 }
